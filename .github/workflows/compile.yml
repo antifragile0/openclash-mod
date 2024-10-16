@@ -112,6 +112,8 @@ jobs:
           prerelease: false
           files: |
             ./artifacts/luci-app-openclash*.ipk
+          body: |
+                Update ${{ env.changelog }}
 
       - name: 📬 Send notification to Telegram
         run: |
