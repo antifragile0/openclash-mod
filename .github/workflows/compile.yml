@@ -71,13 +71,17 @@ jobs:
 
           echo -e "\033[34m🔨 Compiling ${PKG_NAME} package \033[0m"
           make package/${PKG_NAME}/{clean,compile} -j$(nproc) > /dev/null 2>&1
-
+          
+      - name: 🔍 Find IPK file
+        run: |
+          IPK_PATH=$(find sdk/bin/packages/x86_64/ -name "luci-app-openclash*.ipk")
+          echo "IPK_PATH=$IPK_PATH" >> $GITHUB_ENV
+          
       - name: ⬆️ Upload IPK To Release
         uses: actions/upload-artifact@v3
         with:
           name: ipk-packages
-          path: |
-            sdk/bin/packages/x86_64/base/${{ env.PKG_NAME }}_${{ env.PKG_VERSION }}-beta_all.ipk
+          path: ${{ env.IPK_PATH }}
 
   release:
     name: Create Release
