@@ -34,7 +34,6 @@ define Package/$(PKG_NAME)
 	SUBMENU:=3. Applications
 	TITLE:=LuCI support for clash
 	PKGARCH:=all
-	DEPENDS:=+luci
 	MAINTAINER:=vernesong
 endef
 
