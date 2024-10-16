@@ -60,7 +60,7 @@ function config_check(CONFIG_FILE)
 	end
 end
 
-ful = SimpleForm("upload", translate("Config Manage"), nil)
+ful = SimpleForm("upload", translate(""), nil)
 ful.reset = false
 ful.submit = false
 
@@ -187,7 +187,7 @@ e[t].remove=0
 end
 end
 
-form=SimpleForm("config_file_list",translate("Config File List"))
+form=SimpleForm("config_file_list",translate(""))
 form.reset=false
 form.submit=false
 tb=form:section(Table,e)
@@ -201,7 +201,7 @@ st.template="openclash/cfg_check"
 ck.template="openclash/cfg_check"
 sb.template="openclash/sub_info_show"
 
-btnis=tb:option(Button,"switch",translate("Switch Config"))
+btnis=tb:option(Button,"switch",translate("Switch"))
 btnis.template="openclash/other_button"
 btnis.render=function(o,t,a)
 if not e[t] then return false end
@@ -230,7 +230,7 @@ btned.write=function(a,t)
 	HTTP.redirect(DISP.build_url("admin", "services", "openclash", "other-file-edit", "config", "%s") %file_path)
 end
 
-btncp=tb:option(Button,"copy",translate("Copy Config"))
+btncp=tb:option(Button,"copy",translate("Copy"))
 btncp.template="openclash/other_button"
 btncp.render=function(o,t,a)
 if not e[t] then return false end
@@ -262,7 +262,7 @@ c.value = e[t].name
 Button.render(c,t,a)
 end
 
-btndl = tb:option(Button,"download",translate("Download Config"))
+btndl = tb:option(Button,"download",translate("Download"))
 btndl.template="openclash/other_button"
 btndl.render=function(e,t,a)
 e.inputstyle="remove"
@@ -295,7 +295,7 @@ btndl.write = function (a,t)
 	HTTP.close()
 end
 
-btndlr = tb:option(Button,"download_run",translate("Download Running Config"))
+btndlr = tb:option(Button,"download_run",translate("D/L Running"))
 btndlr.template="openclash/other_button"
 btndlr.render=function(c,t,a)
 	if nixio.fs.access("/etc/openclash/"..e[t].name)  then
@@ -350,7 +350,7 @@ btnrm.write=function(a,t)
 	HTTP.redirect(DISP.build_url("admin", "services", "openclash","config"))
 end
 
-p = SimpleForm("provider_file_manage",translate("Provider File Manage"))
+p = SimpleForm("provider_file_manage",translate(""))
 p.reset = false
 p.submit = false
 
@@ -381,7 +381,7 @@ o.write = function()
   HTTP.redirect(DISP.build_url("admin", "services", "openclash", "game-rules-file-manage"))
 end
 
-m = SimpleForm("openclash",translate("Config File Edit"))
+m = SimpleForm("openclash",translate(""))
 m.reset = false
 m.submit = false
 

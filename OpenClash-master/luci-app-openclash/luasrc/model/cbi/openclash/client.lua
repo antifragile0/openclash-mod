@@ -7,8 +7,8 @@ local UTIL = require "luci.util"
 local fs = require "luci.openclash"
 local uci = require("luci.model.uci").cursor()
 
-m = SimpleForm("openclash",translate("OpenClash"))
-m.description = translate("A Clash Client For OpenWrt")
+m = SimpleForm("openclash",translate(""))
+m.description = translate("")
 m.reset = false
 m.submit = false
 
@@ -75,7 +75,7 @@ if a then
 	ck.template="openclash/cfg_check"
 	sb.template="openclash/sub_info_show"
 
-	btnis=tb:option(Button,"switch",translate("Switch Config"))
+	btnis=tb:option(Button,"switch",translate("Switch"))
 	btnis.template="openclash/other_button"
 	btnis.render=function(o,t,a)
 		if not e[t] then return false end
@@ -154,12 +154,6 @@ o.write = function()
 	uci:commit("openclash")
 	SYS.call("/etc/init.d/openclash stop >/dev/null 2>&1 &")
 end
-
-d = SimpleForm("openclash")
-d.title = translate("Credits")
-d.reset = false
-d.submit = false
-d:section(SimpleSection).template  = "openclash/developer"
 
 dler = SimpleForm("openclash")
 dler.reset = false

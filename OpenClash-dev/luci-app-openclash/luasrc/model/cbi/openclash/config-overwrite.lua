@@ -31,10 +31,9 @@ end
 if not lan_ip or lan_ip == "" then
 	lan_ip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 end
-m = Map("openclash", translate("Overwrite Settings"))
+m = Map("openclash", translate(""))
 m.pageaction = false
-m.description = translate("Note: To restore the default configuration, try accessing:").." <a href='javascript:void(0)' onclick='javascript:restore_config(this)'>http://"..lan_ip.."/cgi-bin/luci/admin/services/openclash/restore</a>"..
-"<br/>"..font_green..translate("For More Useful Meta Core Functions Go Wiki")..": "..font_off.."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://wiki.metacubex.one/\")'>"..translate("https://wiki.metacubex.one/").."</a>"
+m.description = translate("")
 
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
