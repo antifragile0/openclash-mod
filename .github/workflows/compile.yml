@@ -29,13 +29,13 @@ jobs:
           sudo -E apt-get clean > /dev/null 2>&1
 
           echo -e "\033[34m🔧 Configuring environment for ${{ matrix.version }} \033[0m"
-          PKG_NAME=luci-app-openclash
-          PKG_VER=$(grep 'PKG_VERSION:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
+          PKG_NAME=$(grep 'PKG_NAME:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
+          PKG_VERSION=$(grep 'PKG_VERSION:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
           export TERM=xterm
-          echo "PKG_VER=$PKG_VER" >> $GITHUB_ENV
+          echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
           echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
           echo -e "\033[34m\t📦 PKG_NAME:\033[37m $PKG_NAME \033[0m"
-          echo -e "\033[34m\t🔖 PKG_VER:\033[37m $PKG_VER \033[0m"
+          echo -e "\033[34m\t🔖 PKG_VERSION:\033[37m $PKG_VERSION \033[0m"
           echo -e "\033[34m\t💻 TERM:\033[37m xterm \033[0m"
 
       - name: 📦 Set up resources
@@ -46,7 +46,7 @@ jobs:
 
           echo -e "\033[34m📦 Cloning ${{ matrix.version }} package \033[0m"
           git clone -q https://github.com/${{ github.repository }} sdk/package/tmp
-          mv sdk/package/tmp/${{ matrix.version }} sdk/package/
+          mv sdk/package/tmp/${{ matrix.version }}/${PKG_NAME} sdk/package/
           rm -rf sdk/package/tmp
 
       - name: 📡 Set up SDK feeds
@@ -58,7 +58,7 @@ jobs:
 
       - name: ⛏️ Compile po2lmo
         run: |
-          cd sdk/package/${{ matrix.version }}/${PKG_NAME}/tools/po2lmo
+          cd sdk/package/${PKG_NAME}/tools/po2lmo
           make && sudo make install
 
       - name: ⚙️ Configure & compile IPK
@@ -70,7 +70,7 @@ jobs:
           sed -i '/^CONFIG_LUCI_CSSTIDY=/d' .config
 
           echo -e "\033[34m🔨 Compiling ${PKG_NAME} package \033[0m"
-          make package/${{ matrix.version }}/${PKG_NAME}/{clean,compile} -j$(nproc) > /dev/null 2>&1
+          make package/${PKG_NAME}/{clean,compile} -j$(nproc) > /dev/null 2>&1
 
       - name: ⬆️ Upload IPK To Release
         uses: actions/upload-artifact@v3
