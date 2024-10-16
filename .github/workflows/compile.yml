@@ -77,7 +77,7 @@ jobs:
         with:
           name: ipk-packages
           path: |
-            sdk/bin/packages/x86_64/base/${{ env.PKG_NAME }}_${{ env.PKG_VER }}_all.ipk
+            sdk/bin/packages/x86_64/base/${{ env.PKG_NAME }}*.ipk
 
   release:
     name: Create Release
