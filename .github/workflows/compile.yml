@@ -29,7 +29,7 @@ jobs:
           sudo -E apt-get clean > /dev/null 2>&1
 
           echo -e "\033[34m🔧 Configuring environment for ${{ matrix.version }} \033[0m"
-          PKG_NAME=$(grep 'PKG_NAME:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
+          PKG_NAME=luci-app-openclash
           PKG_VERSION=$(grep 'PKG_VERSION:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
           export TERM=xterm
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
