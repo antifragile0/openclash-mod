@@ -1,0 +1,118 @@
+name: Build IPK
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'OpenClash-master/luci-app-openclash/Makefile'
+      - 'OpenClash-dev/luci-app-openclash/Makefile'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Packages
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [master, dev]
+    
+    steps:
+      - name: 🔄 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Set up build environment
+        run: |
+          echo -e "\033[34m🔨 Preparing build environment \033[0m"
+          sudo -E apt-get update > /dev/null 2>&1
+          sudo -E apt-get install build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget > /dev/null 2>&1
+          sudo -E apt-get autoremove --purge > /dev/null 2>&1
+          sudo -E apt-get clean > /dev/null 2>&1
+
+          echo -e "\033[34m🔧 Configuring environment for ${{ matrix.version }} \033[0m"
+          PKG_NAME=luci-app-openclash
+          PKG_VER=$(grep 'PKG_VERSION:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
+          export TERM=xterm
+          echo "PKG_VER=$PKG_VER" >> $GITHUB_ENV
+          echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
+          echo -e "\033[34m\t📦 PKG_NAME:\033[37m $PKG_NAME \033[0m"
+          echo -e "\033[34m\t🔖 PKG_VER:\033[37m $PKG_VER \033[0m"
+          echo -e "\033[34m\t💻 TERM:\033[37m xterm \033[0m"
+
+      - name: 📦 Set up resources
+        run: |
+          echo -e "\033[34m🗂️ Downloading SDK OpenWRT \033[0m"
+          curl -s -L https://downloads.openwrt.org/releases/23.05.4/targets/x86/64/openwrt-sdk-23.05.4-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz -o sdk.tar.xz
+          mkdir sdk && tar -xf sdk.tar.xz -C sdk --strip-components=1
+
+          echo -e "\033[34m📦 Cloning ${{ matrix.version }} package \033[0m"
+          git clone -q https://github.com/${{ github.repository }} sdk/package/tmp
+          mv sdk/package/tmp/${{ matrix.version }} sdk/package/
+          rm -rf sdk/package/tmp
+
+      - name: 📡 Set up SDK feeds
+        run: |
+          echo -e "\033[34m🔍 Updating SDK feeds \033[0m"
+          cd sdk
+          ./scripts/feeds update -a > /dev/null 2>&1
+          ./scripts/feeds install -a > /dev/null 2>&1
+
+      - name: Compile po2lmo
+        run: |
+          cd sdk/package/${{ matrix.version }}/${PKG_NAME}/tools/po2lmo
+          make && sudo make install
+
+      - name: ⚙️ Configure & compile IPK
+        run: |
+          echo -e "\033[34m🔧 Configuring SDK \033[0m"
+          cd sdk && make defconfig > /dev/null 2>&1
+          rm -rf feeds/luci/contrib/package/csstidy
+          sed -i '/^CONFIG_LUCI_JSMIN=/d' .config
+          sed -i '/^CONFIG_LUCI_CSSTIDY=/d' .config
+
+          echo -e "\033[34m🔨 Compiling ${PKG_NAME} package \033[0m"
+          make package/${{ matrix.version }}/${PKG_NAME}/{clean,compile} -j$(nproc) > /dev/null 2>&1
+
+      - name: ⬆️ Upload IPK To Release
+        uses: actions/upload-artifact@v3
+        with:
+          name: ipk-packages
+          path: |
+            sdk/bin/packages/x86_64/luci/${{ env.PKG_NAME }}_${{ env.PKG_VER }}_all.ipk
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    steps:
+      - name: ⏰ Set up date for tag and release name
+        id: set_tag_date
+        run: |
+          echo "release_date=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+          echo "changelog=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: 📥 Download IPK
+        uses: actions/download-artifact@v3
+        with:
+          name: ipk-packages
+          path: ./artifacts/
+
+      - name: 🚀 Generate new tag & release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          name: ${{ env.release_date }}
+          tag_name: ${{ env.release_date }}
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/luci-app-openclash*.ipk
+          body: |
+            ### Update ${{ env.changelog }}
+
+      - name: 📬 Send notification to Telegram
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
+          -d "chat_id=${{ secrets.CHAT_ID }}" \
+          -d "text=New release for luci-app-openclas, Changelog ${{ env.changelog }}"
