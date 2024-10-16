@@ -92,6 +92,7 @@ jobs:
       - name: ⏰ Set up date for tag and release name
         id: set_tag_date
         run: |
+          export TZ='Asia/Jakarta'
           echo "release_date=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
           echo "changelog=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
