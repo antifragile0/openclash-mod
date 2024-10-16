@@ -1,7 +1,8 @@
 <div align="center">
+  <img src="images/clash.png" alt="Clash" width="200">
   <h1>OpenClash Mod Version</h1>
 </div>
-<hr/>
+
 <div align="center">
   <img alt="License" src="https://img.shields.io/github/license/Maizil41/openclash-mod?style=for-the-badge">
   <a target="_blank" href="https://github.com/Maizil41/openclash-mod/releases"><img src="https://img.shields.io/github/release/Maizil41/openclash-mod?style=for-the-badge&logo=github"></a>
