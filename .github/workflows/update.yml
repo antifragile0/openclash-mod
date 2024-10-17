@@ -16,44 +16,25 @@ jobs:
         cd master
         git init
 
-        # Menambahkan remote repository
         git remote add origin https://github.com/vernesong/OpenClash.git
 
-        # Fetch commit terbaru dari branch dev
         git fetch origin dev
 
-        # Dapatkan commit terakhir dan pesan commit
         LAST_COMMIT=$(git log -1 --pretty=format:"%H" origin/dev)
         COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" origin/dev)
 
-        # Temukan commit dengan pesan yang sama
         COMMIT_WITH_SAME_MESSAGE=$(git log --grep="$COMMIT_MESSAGE" --pretty=format:"%H" origin/dev -1)
 
-        # Dapatkan daftar file yang diubah
         FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r $COMMIT_WITH_SAME_MESSAGE)
 
-        # Ambil hanya file yang diubah
         for file in $FILES_CHANGED; do
             git checkout $COMMIT_WITH_SAME_MESSAGE -- "$file"
         done
 
-        sleep 1
-
-        cd /home/runner/work/openclash-mod/openclash-mod/
-        
-        sleep 1
-        
-        git clone -q https://github.com/${{ github.repository }} tmp/
-
-        cd master/
-
-        ls
-        
-        mv * /home/runner/work/openclash-mod/openclash-mod/tmp/
+        mv * /home/runner/work/openclash-mod/openclash-mod/
 
     - name: Commit and Push Changes
       run: |
-        cd tmp/
         git config --local user.name "github-actions[bot]"
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         
