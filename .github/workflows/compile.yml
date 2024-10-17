@@ -32,6 +32,7 @@ jobs:
           PKG_NAME=luci-app-openclash
           PKG_VERSION=$(grep 'PKG_VERSION:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
           IPK_FILE="${PKG_NAME}_${PKG_VERSION}-beta_all.ipk"
+          echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
           echo "IPK_FILE=$IPK_FILE" >> $GITHUB_ENV
           echo -e "\033[34m\t📦 PKG_NAME:\033[37m $PKG_NAME \033[0m"
