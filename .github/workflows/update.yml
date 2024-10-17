@@ -48,8 +48,8 @@ jobs:
 
       - name: Update version
         run: |
-          if [ -f "Openclash stable/luci-app-openclash/Makefile" ]; then
-            MAKEFILE_VERSION=$(grep 'PKG_VERSION:=' "Openclash stable/luci-app-openclash/Makefile" | cut -d'=' -f2)
+          if [ -f "OpenClash-master/luci-app-openclash/Makefile" ]; then
+            MAKEFILE_VERSION=$(grep 'PKG_VERSION:=' "OpenClash-master/luci-app-openclash/Makefile" | cut -d'=' -f2)
             sed -i "s/versi: .*/versi: $MAKEFILE_VERSION/" README.md
             git add README.md
             git commit -m "Update TO $MAKEFILE_VERSION" || echo "No version changes to commit"
