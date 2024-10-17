@@ -10,45 +10,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Source Repository
-      uses: actions/checkout@v2
-      with:
-        repository: vernesong/OpenClash  # Ganti dengan repository asal
-        path: source_repo  # Tempat untuk checkout repository asal
+    - name: Setup Temporary Repository
+      run: |
+        mkdir repo-temp
+        cd repo-temp
+        git init
+        git remote add origin https://github.com/vernesong/OpenClash.git
+        git fetch origin dev
 
     - name: Get Last Commit ID and Message
       id: get_commit
       run: |
-        cd source_repo  # Pindah ke direktori repository asal
-        LAST_COMMIT=$(git log -1 --pretty=format:"%H")
-        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+        cd repo-temp  # Pindah ke direktori repo-temp
+        LAST_COMMIT=$(git log -1 --pretty=format:"%H" origin/dev)
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" origin/dev)
         echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
         echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_ENV
 
     - name: Get Commit with Same Message
       id: get_commit_same_message
       run: |
-        cd source_repo  # Pindah ke direktori repository asal
-        COMMIT_WITH_SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" -1)
+        cd repo-temp  # Pindah ke direktori repo-temp
+        COMMIT_WITH_SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" origin/dev -1)
         echo "commit_with_same_message=$COMMIT_WITH_SAME_MESSAGE" >> $GITHUB_ENV
 
     - name: Get Changed Files
       id: get_changed_files
       run: |
-        cd source_repo  # Pindah ke direktori repository asal
+        cd repo-temp  # Pindah ke direktori repo-temp
         FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r ${{ env.commit_with_same_message }})
         echo "files_changed=$FILES_CHANGED" >> $GITHUB_ENV
+
+    - name: Checkout Changed Files
+      run: |
+        cd repo-temp  # Pindah ke direktori repo-temp
+        IFS=',' read -ra FILE_ARRAY <<< "${{ env.files_changed }}"
+        for file in "${FILE_ARRAY[@]}"; do
+            git checkout ${{ env.commit_with_same_message }} -- "$file"
+        done
 
     - name: Checkout Current Repository
       uses: actions/checkout@v2
 
     - name: Copy Changed Files to Current Repo
       run: |
-        IFS=',' read -ra FILE_ARRAY <<< "${{ env.files_changed }}"
-        for file in "${FILE_ARRAY[@]}"; do
-            cp "source_repo/$file" .
-        done
-
+        cp -r repo-temp/* .  # Menyalin file yang diubah ke repository saat ini
+        
     - name: Commit and Push Changes
       run: |
         git config --local user.name "github-actions[bot]"
