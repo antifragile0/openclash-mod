@@ -1,0 +1,56 @@
+name: Sync Files
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  sync-files:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+      with:
+        repository: vernesong/OpenClash
+        path: source_repo
+
+    - name: Get Last Commit ID and Message
+      id: get_commit
+      run: |
+        LAST_COMMIT=$(git log -1 --pretty=format:"%H" source_repo/dev)
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" source_repo/dev)
+        echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
+        echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_ENV
+
+    - name: Get Commit with Same Message
+      id: same_commit_message
+      run: |
+        SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" source_repo/dev -1)
+        echo "commit_with_same_message=$SAME_MESSAGE" >> $GITHUB_ENV
+
+    - name: Get Changed Files
+      id: get_changed_files
+      run: |
+        FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r ${{ env.same_message }} -- source_repo/dev)
+        echo "files_changed=$FILES_CHANGED" >> $GITHUB_ENV
+
+    - name: Checkout Current Repository
+      uses: actions/checkout@v2
+
+    - name: Copy Changed Files to Current Repo
+      run: |
+        IFS=',' read -ra FILE_ARRAY <<< "${{ env.files_changed }}"
+        for file in "${FILE_ARRAY[@]}"; do
+            cp "source_repo/$file" .
+        done
+
+    - name: Commit and Push Changes
+      run: |
+        git config --local user.name "github-actions[bot]"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "${{ env.commit_message }}"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
