@@ -80,15 +80,15 @@ jobs:
         id: set_date
         run: |
           export TZ='Asia/Jakarta'
-          echo "date_time=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+          echo "date_time=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
           
       - name: 🚀 Release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         with:
-          name: ${{ env.PKG_VERSION }}-beta
-          tag_name: ${{ env.PKG_VERSION }}-beta
+          name: v${{ env.PKG_VERSION }}-beta
+          tag_name: v${{ env.PKG_VERSION }}-beta
           draft: false
           prerelease: false
           files: ${{ env.PKG_PATH }}
