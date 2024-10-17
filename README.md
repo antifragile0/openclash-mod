@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="images/clash.png" alt="Clash" width="200">
+  <a target="_blank" href="https://raw.githubusercontent.com/Maizil41/openclash-mod/main/images/clash.png"><img src="images/clash.png" alt="Clash" width="200"></a>
   <h1>OpenClash Mod Version</h1>
 </div>
 
