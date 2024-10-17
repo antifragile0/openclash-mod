@@ -4,18 +4,14 @@ on:
     branches:
       - master
     paths:
-      - 'OpenClash-master/luci-app-openclash/Makefile'
-      - 'OpenClash-dev/luci-app-openclash/Makefile'
+      - 'luci-app-openclash/Makefile'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Packages
+    name: Build IPK
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        version: [OpenClash-master, OpenClash-dev]
-    
+
     steps:
       - name: 🔄 Checkout repository
         uses: actions/checkout@v4
@@ -27,55 +23,29 @@ jobs:
           sudo -E apt-get install build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget > /dev/null 2>&1
           sudo -E apt-get autoremove --purge > /dev/null 2>&1
           sudo -E apt-get clean > /dev/null 2>&1
-
-          echo -e "\033[34m🔧 Configuring environment for ${{ matrix.version }} \033[0m"
+          
+          echo -e "\033[34m🔧 Configuring environment \033[0m"
           PKG_NAME=luci-app-openclash
-          PKG_VERSION=$(grep 'PKG_VERSION:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
-          IPK_FILE="${PKG_NAME}_${PKG_VERSION}-beta_all.ipk"
+          PKG_VERSION=$(grep 'PKG_VERSION:=' $PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
+          export TERM=xterm
           echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
-          echo "IPK_FILE=$IPK_FILE" >> $GITHUB_ENV
           echo -e "\033[34m\t📦 PKG_NAME:\033[37m $PKG_NAME \033[0m"
           echo -e "\033[34m\t🔖 PKG_VERSION:\033[37m $PKG_VERSION \033[0m"
-          echo -e "\033[34m\t📂 IPK_FILE:\033[37m $IPK_FILE \033[0m"
-
-      - name: 🔍 Check if IPK file already released
-        id: check_ipk_file
-        run: |
-          RELEASES_URL="https://api.github.com/repos/Maizil41/openclash-mod/releases/latest"
-          IPK_FILE="$IPK_FILE"
-          ASSETS_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $RELEASES_URL | jq -r '.assets_url')
-          echo "Assets URL: $ASSETS_URL"
-
-          ASSET_FOUND=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $ASSETS_URL | jq -r '.[] | select(.name == "'$IPK_FILE'") | .name')
-          if [ "$ASSET_FOUND" == "$IPK_FILE" ]; then
-            echo "IPK file $IPK_FILE already exists in the latest release. Skipping build."
-            echo "skip_build=true" >> $GITHUB_ENV
-          else
-            echo "IPK file $IPK_FILE not found in the latest release. Proceeding with build."
-            echo "skip_build=false" >> $GITHUB_ENV
-          fi
-        shell: bash
-
-      - name: ⏩ Skip build if IPK file exists
-        if: env.skip_build == 'true'
-        run: |
-          echo "Skipping build process for $IPK_FILE"
-
+          echo -e "\033[34m\t💻 TERM:\033[37m xterm \033[0m"
+          
       - name: 📦 Set up resources
-        if: env.skip_build == 'false'
         run: |
           echo -e "\033[34m🗂️ Downloading SDK OpenWRT \033[0m"
-          curl -s -L https://downloads.openwrt.org/releases/23.05.4/targets/x86/64/openwrt-sdk-23.05.4-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz -o sdk.tar.xz
+          curl -s -L https://downloads.openwrt.org/releases/23.05.5/targets/x86/64/openwrt-sdk-23.05.5-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz -o sdk.tar.xz
           mkdir sdk && tar -xf sdk.tar.xz -C sdk --strip-components=1
 
-          echo -e "\033[34m📦 Cloning ${{ matrix.version }} package \033[0m"
+          echo -e "\033[34m📦 Cloning package \033[0m"
           git clone -q https://github.com/${{ github.repository }} sdk/package/tmp
-          mv sdk/package/tmp/${{ matrix.version }}/${PKG_NAME} sdk/package/
+          mv sdk/package/tmp/${PKG_NAME} sdk/package/
           rm -rf sdk/package/tmp
 
       - name: 📡 Set up SDK feeds
-        if: env.skip_build == 'false'
         run: |
           echo -e "\033[34m🔍 Updating SDK feeds \033[0m"
           cd sdk
@@ -83,13 +53,11 @@ jobs:
           ./scripts/feeds install -a > /dev/null 2>&1
 
       - name: ⛏️ Compile po2lmo
-        if: env.skip_build == 'false'
         run: |
           cd sdk/package/${PKG_NAME}/tools/po2lmo
           make && sudo make install
 
       - name: ⚙️ Configure & compile IPK
-        if: env.skip_build == 'false'
         run: |
           echo -e "\033[34m🔧 Configuring SDK \033[0m"
           cd sdk && make defconfig > /dev/null 2>&1
@@ -99,55 +67,30 @@ jobs:
 
           echo -e "\033[34m🔨 Compiling ${PKG_NAME} package \033[0m"
           make package/${PKG_NAME}/{clean,compile} -j$(nproc) > /dev/null 2>&1
-          
-      - name: 🔍 Find IPK file
-        if: env.skip_build == 'false'
-        run: |
-          IPK_PATH=$(find sdk/bin/packages/x86_64/ -name "luci-app-openclash*.ipk")
-          echo "IPK_PATH=$IPK_PATH" >> $GITHUB_ENV
-          
-      - name: ⬆️ Upload IPK To Release
-        if: env.skip_build == 'false'
-        uses: actions/upload-artifact@v3
-        with:
-          name: ipk-packages
-          path: ${{ env.IPK_PATH }}
 
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: [build]
+          echo -e "\033[34m📦 Compilation completed: \033[0m"
+          PKG_PATH=$(find bin/packages/x86_64/ -name "luci-app-openclash*.ipk")
+          PKG_FILE=$(basename $PKG_PATH)
+          echo "PKG_PATH=sdk/$PKG_PATH" >> $GITHUB_ENV
+          echo "PKG_FILE=$PKG_FILE" >> $GITHUB_ENV
+          echo -e "\033[34m\t📂 Package path:\033[37m $PKG_PATH \033[0m"
+          echo -e "\033[34m\t📄 Package file:\033[37m $PKG_FILE \033[0m"
 
-    steps:
-      - name: ⏰ Set up date for tag and release name
-        id: set_tag_date
+      - name: ⏰ Set up date
+        id: set_date
         run: |
           export TZ='Asia/Jakarta'
-          echo "release_date=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-          echo "changelog=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      - name: 📥 Download IPK
-        uses: actions/download-artifact@v3
-        with:
-          name: ipk-packages
-          path: ./artifacts/
-
-      - name: 🚀 Generate new tag & release
+          echo "date_time=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+          
+      - name: 🚀 Release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         with:
-          name: Update To ${{ env.PKG_VERSION }}
-          tag_name: ${{ env.release_date }}
+          name: ${{ env.PKG_VERSION }}-beta
+          tag_name: ${{ env.PKG_VERSION }}-beta
           draft: false
           prerelease: false
-          files: |
-            ./artifacts/luci-app-openclash*.ipk
+          files: ${{ env.PKG_PATH }}
           body: |
-                Update ${{ env.changelog }}
-
-      - name: 📬 Send notification to Telegram
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
-          -d "chat_id=${{ secrets.CHAT_ID }}" \
-          -d "text=New release for luci-app-openclas, Changelog ${{ env.changelog }}"
+              * Date : ${{ env.date_time }}
