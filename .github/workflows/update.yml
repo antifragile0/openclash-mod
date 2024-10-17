@@ -17,13 +17,14 @@ jobs:
         git init
         git remote add origin https://github.com/vernesong/OpenClash.git
         git fetch origin dev
+        git checkout -b dev origin/dev  # Membuat branch baru dari branch dev
 
     - name: Get Last Commit ID and Message
       id: get_commit
       run: |
         cd repo-temp  # Pindah ke direktori repo-temp
-        LAST_COMMIT=$(git log -1 --pretty=format:"%H" origin/dev)
-        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" origin/dev)
+        LAST_COMMIT=$(git log -1 --pretty=format:"%H")
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
         echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
         echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_ENV
 
