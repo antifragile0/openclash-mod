@@ -10,30 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout Source Repository
       uses: actions/checkout@v2
       with:
-        repository: vernesong/OpenClash
-        path: source_repo
+        repository: vernesong/OpenClash  # Ganti dengan repository asal
+        path: source_repo  # Tempat untuk checkout repository asal
 
     - name: Get Last Commit ID and Message
       id: get_commit
       run: |
-        LAST_COMMIT=$(git log -1 --pretty=format:"%H" source_repo/dev)
-        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" source_repo/dev)
+        cd source_repo  # Pindah ke direktori repository asal
+        LAST_COMMIT=$(git log -1 --pretty=format:"%H")
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
         echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
         echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_ENV
 
     - name: Get Commit with Same Message
-      id: same_commit_message
+      id: get_commit_same_message
       run: |
-        SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" source_repo/dev -1)
-        echo "commit_with_same_message=$SAME_MESSAGE" >> $GITHUB_ENV
+        cd source_repo  # Pindah ke direktori repository asal
+        COMMIT_WITH_SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" -1)
+        echo "commit_with_same_message=$COMMIT_WITH_SAME_MESSAGE" >> $GITHUB_ENV
 
     - name: Get Changed Files
       id: get_changed_files
       run: |
-        FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r ${{ env.same_message }} -- source_repo/dev)
+        cd source_repo  # Pindah ke direktori repository asal
+        FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r ${{ env.commit_with_same_message }})
         echo "files_changed=$FILES_CHANGED" >> $GITHUB_ENV
 
     - name: Checkout Current Repository
