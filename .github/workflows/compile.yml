@@ -43,17 +43,17 @@ jobs:
         run: |
           RELEASES_URL="https://api.github.com/repos/${{ github.repository }}/releases/latest"
           IPK_FILE="${{ env.IPK_FILE }}"
-          ASSETS_URL=$(curl -s $RELEASES_URL | jq -r '.assets_url')
+          ASSETS_URL=$(curl -s -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" $RELEASES_URL | jq -r '.assets_url')
           echo "Assets URL: $ASSETS_URL"
 
-          # Get asset list from release and check if the IPK file exists
-          ASSET_FOUND=$(curl -s $ASSETS_URL | jq -r '.[] | select(.name == "'$IPK_FILE'") | .name')
+          ASSET_FOUND=$(curl -s -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" $ASSETS_URL | jq -r '.[] | select(.name == "'$IPK_FILE'") | .name')
           if [ "$ASSET_FOUND" == "$IPK_FILE" ]; then
             echo "IPK file $IPK_FILE already exists in the latest release. Skipping build."
             echo "skip_build=true" >> $GITHUB_ENV
           else
             echo "IPK file $IPK_FILE not found in the latest release. Proceeding with build."
             echo "skip_build=false" >> $GITHUB_ENV
+        shell: bash
 
       - name: ⏩ Skip build if IPK file exists
         if: env.skip_build == 'true'
