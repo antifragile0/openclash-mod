@@ -31,14 +31,37 @@ jobs:
           echo -e "\033[34m🔧 Configuring environment for ${{ matrix.version }} \033[0m"
           PKG_NAME=luci-app-openclash
           PKG_VERSION=$(grep 'PKG_VERSION:=' ${{ matrix.version }}/$PKG_NAME/Makefile | awk -F '=' '{print $2}' | tr -d ' ')
-          export TERM=xterm
+          IPK_FILE="${PKG_NAME}_${PKG_VERSION}-beta_all.ipk"
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
-          echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
+          echo "IPK_FILE=$IPK_FILE" >> $GITHUB_ENV
           echo -e "\033[34m\t📦 PKG_NAME:\033[37m $PKG_NAME \033[0m"
           echo -e "\033[34m\t🔖 PKG_VERSION:\033[37m $PKG_VERSION \033[0m"
-          echo -e "\033[34m\t💻 TERM:\033[37m xterm \033[0m"
+          echo -e "\033[34m\t📂 IPK_FILE:\033[37m $IPK_FILE \033[0m"
+
+      - name: 🔍 Check if IPK file already released
+        id: check_ipk_file
+        run: |
+          RELEASES_URL="https://api.github.com/repos/${{ github.repository }}/releases/latest"
+          IPK_FILE="${{ env.IPK_FILE }}"
+          ASSETS_URL=$(curl -s $RELEASES_URL | jq -r '.assets_url')
+          echo "Assets URL: $ASSETS_URL"
+
+          # Get asset list from release and check if the IPK file exists
+          ASSET_FOUND=$(curl -s $ASSETS_URL | jq -r '.[] | select(.name == "'$IPK_FILE'") | .name')
+          if [ "$ASSET_FOUND" == "$IPK_FILE" ]; then
+            echo "IPK file $IPK_FILE already exists in the latest release. Skipping build."
+            echo "skip_build=true" >> $GITHUB_ENV
+          else
+            echo "IPK file $IPK_FILE not found in the latest release. Proceeding with build."
+            echo "skip_build=false" >> $GITHUB_ENV
+
+      - name: ⏩ Skip build if IPK file exists
+        if: env.skip_build == 'true'
+        run: |
+          echo "Skipping build process for $IPK_FILE"
 
       - name: 📦 Set up resources
+        if: env.skip_build == 'false'
         run: |
           echo -e "\033[34m🗂️ Downloading SDK OpenWRT \033[0m"
           curl -s -L https://downloads.openwrt.org/releases/23.05.4/targets/x86/64/openwrt-sdk-23.05.4-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz -o sdk.tar.xz
@@ -107,7 +130,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         with:
-          name: ${{ env.release_date }}
+          name: Update To ${{ env.PKG_VERSION }}
           tag_name: ${{ env.release_date }}
           draft: false
           prerelease: false
