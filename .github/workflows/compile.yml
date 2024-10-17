@@ -74,6 +74,7 @@ jobs:
           rm -rf sdk/package/tmp
 
       - name: 📡 Set up SDK feeds
+        if: env.skip_build == 'false'
         run: |
           echo -e "\033[34m🔍 Updating SDK feeds \033[0m"
           cd sdk
@@ -81,11 +82,13 @@ jobs:
           ./scripts/feeds install -a > /dev/null 2>&1
 
       - name: ⛏️ Compile po2lmo
+        if: env.skip_build == 'false'
         run: |
           cd sdk/package/${PKG_NAME}/tools/po2lmo
           make && sudo make install
 
       - name: ⚙️ Configure & compile IPK
+        if: env.skip_build == 'false'
         run: |
           echo -e "\033[34m🔧 Configuring SDK \033[0m"
           cd sdk && make defconfig > /dev/null 2>&1
@@ -97,11 +100,13 @@ jobs:
           make package/${PKG_NAME}/{clean,compile} -j$(nproc) > /dev/null 2>&1
           
       - name: 🔍 Find IPK file
+        if: env.skip_build == 'false'
         run: |
           IPK_PATH=$(find sdk/bin/packages/x86_64/ -name "luci-app-openclash*.ipk")
           echo "IPK_PATH=$IPK_PATH" >> $GITHUB_ENV
           
       - name: ⬆️ Upload IPK To Release
+        if: env.skip_build == 'false'
         uses: actions/upload-artifact@v3
         with:
           name: ipk-packages
