@@ -16,3 +16,4 @@
 <hr/>
 
 ![Dashboard](images/openclash.png)
+![Dashboard](images/openclash1.png)
