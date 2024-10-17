@@ -31,7 +31,7 @@ jobs:
       id: get_commit_same_message
       run: |
         cd repo-temp  # Pindah ke direktori repo-temp
-        COMMIT_WITH_SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" origin/dev -1)
+        COMMIT_WITH_SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" -1)
         echo "commit_with_same_message=$COMMIT_WITH_SAME_MESSAGE" >> $GITHUB_ENV
 
     - name: Get Changed Files
@@ -39,15 +39,25 @@ jobs:
       run: |
         cd repo-temp  # Pindah ke direktori repo-temp
         FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r ${{ env.commit_with_same_message }})
-        echo "files_changed=$FILES_CHANGED" >> $GITHUB_ENV
+        # Memastikan FILES_CHANGED tidak kosong dan diformat dengan benar
+        if [ -z "$FILES_CHANGED" ]; then
+          echo "No files changed."
+          echo "files_changed=" >> $GITHUB_ENV
+        else
+          echo "files_changed=$FILES_CHANGED" >> $GITHUB_ENV
+        fi
 
     - name: Checkout Changed Files
       run: |
         cd repo-temp  # Pindah ke direktori repo-temp
-        IFS=',' read -ra FILE_ARRAY <<< "${{ env.files_changed }}"
-        for file in "${FILE_ARRAY[@]}"; do
-            git checkout ${{ env.commit_with_same_message }} -- "$file"
-        done
+        if [ -n "${{ env.files_changed }}" ]; then
+          IFS=',' read -ra FILE_ARRAY <<< "${{ env.files_changed }}"
+          for file in "${FILE_ARRAY[@]}"; do
+              git checkout ${{ env.commit_with_same_message }} -- "$file"
+          done
+        else
+          echo "No files to checkout."
+        fi
 
     - name: Checkout Current Repository
       uses: actions/checkout@v2
