@@ -2,77 +2,55 @@ name: Sync Files
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # Menjalankan setiap hari pada jam 00:00 UTC
+  workflow_dispatch:  # Memungkinkan untuk menjalankan workflow secara manual
 
 jobs:
   sync-files:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Setup Temporary Repository
+    - name: Clone Main Repository
       run: |
-        mkdir repo-temp
-        cd repo-temp
+        mkdir master
+        cd master
         git init
+
+        # Menambahkan remote repository
         git remote add origin https://github.com/vernesong/OpenClash.git
+
+        # Fetch commit terbaru dari branch dev
         git fetch origin dev
-        git checkout -b dev origin/dev  # Membuat branch baru dari branch dev
 
-    - name: Get Last Commit ID and Message
-      id: get_commit
-      run: |
-        cd repo-temp  # Pindah ke direktori repo-temp
-        LAST_COMMIT=$(git log -1 --pretty=format:"%H")
-        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
-        echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
-        echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_ENV
+        # Dapatkan commit terakhir dan pesan commit
+        LAST_COMMIT=$(git log -1 --pretty=format:"%H" origin/dev)
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" origin/dev)
 
-    - name: Get Commit with Same Message
-      id: get_commit_same_message
-      run: |
-        cd repo-temp  # Pindah ke direktori repo-temp
-        COMMIT_WITH_SAME_MESSAGE=$(git log --grep="${{ env.commit_message }}" --pretty=format:"%H" -1)
-        echo "commit_with_same_message=$COMMIT_WITH_SAME_MESSAGE" >> $GITHUB_ENV
+        # Temukan commit dengan pesan yang sama
+        COMMIT_WITH_SAME_MESSAGE=$(git log --grep="$COMMIT_MESSAGE" --pretty=format:"%H" origin/dev -1)
 
-    - name: Get Changed Files
-      id: get_changed_files
-      run: |
-        cd repo-temp  # Pindah ke direktori repo-temp
-        FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r ${{ env.commit_with_same_message }})
-        # Memastikan FILES_CHANGED tidak kosong dan diformat dengan benar
-        if [ -z "$FILES_CHANGED" ]; then
-          echo "No files changed."
-          echo "files_changed=" >> $GITHUB_ENV
-        else
-          echo "files_changed=$FILES_CHANGED" >> $GITHUB_ENV
-        fi
+        # Dapatkan daftar file yang diubah
+        FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r $COMMIT_WITH_SAME_MESSAGE)
 
-    - name: Checkout Changed Files
-      run: |
-        cd repo-temp  # Pindah ke direktori repo-temp
-        if [ -n "${{ env.files_changed }}" ]; then
-          IFS=',' read -ra FILE_ARRAY <<< "${{ env.files_changed }}"
-          for file in "${FILE_ARRAY[@]}"; do
-              git checkout ${{ env.commit_with_same_message }} -- "$file"
-          done
-        else
-          echo "No files to checkout."
-        fi
+        # Ambil hanya file yang diubah
+        for file in $FILES_CHANGED; do
+            git checkout $COMMIT_WITH_SAME_MESSAGE -- "$file"
+        done
 
-    - name: Checkout Current Repository
-      uses: actions/checkout@v2
-
-    - name: Copy Changed Files to Current Repo
-      run: |
-        cp -r repo-temp/* .  # Menyalin file yang diubah ke repository saat ini
+        sleep 1  # Memberi waktu untuk proses checkout
         
+        # Clone repository tujuan
+        git clone https://github.com/${{ github.repository }} tmp/
+        mv master/* tmp/openclash-mod/  # Memindahkan file yang diambil ke direktori yang sesuai
+
     - name: Commit and Push Changes
       run: |
+        cd tmp/openclash-mod/  # Pindah ke direktori openclash-mod
         git config --local user.name "github-actions[bot]"
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git add .
-        git commit -m "${{ env.commit_message }}"
+        
+        git add .  # Menambahkan semua perubahan
+        git commit -m "${COMMIT_MESSAGE}" || echo "No changes to commit"  # Menghindari error jika tidak ada perubahan
         git push
       env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+        GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}  # Token untuk otorisasi
