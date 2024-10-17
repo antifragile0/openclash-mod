@@ -41,19 +41,19 @@ jobs:
       - name: 🔍 Check if IPK file already released
         id: check_ipk_file
         run: |
-        RELEASES_URL="https://api.github.com/repos/Maizil41/openclash-mod/releases/latest"
-        IPK_FILE="luci-app-openclash_0.46.033-beta_all.ipk"
-        ASSETS_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $RELEASES_URL | jq -r '.assets_url')
-        echo "Assets URL: $ASSETS_URL"
+          RELEASES_URL="https://api.github.com/repos/Maizil41/openclash-mod/releases/latest"
+          IPK_FILE="luci-app-openclash_0.46.033-beta_all.ipk"
+          ASSETS_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $RELEASES_URL | jq -r '.assets_url')
+          echo "Assets URL: $ASSETS_URL"
 
-        ASSET_FOUND=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $ASSETS_URL | jq -r '.[] | select(.name == "'$IPK_FILE'") | .name')
-        if [ "$ASSET_FOUND" == "$IPK_FILE" ]; then
-          echo "IPK file $IPK_FILE already exists in the latest release. Skipping build."
-          echo "skip_build=true" >> $GITHUB_ENV
-        else
-          echo "IPK file $IPK_FILE not found in the latest release. Proceeding with build."
-          echo "skip_build=false" >> $GITHUB_ENV
-        fi
+          ASSET_FOUND=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $ASSETS_URL | jq -r '.[] | select(.name == "'$IPK_FILE'") | .name')
+          if [ "$ASSET_FOUND" == "$IPK_FILE" ]; then
+            echo "IPK file $IPK_FILE already exists in the latest release. Skipping build."
+            echo "skip_build=true" >> $GITHUB_ENV
+          else
+            echo "IPK file $IPK_FILE not found in the latest release. Proceeding with build."
+            echo "skip_build=false" >> $GITHUB_ENV
+          fi
         shell: bash
 
       - name: ⏩ Skip build if IPK file exists
