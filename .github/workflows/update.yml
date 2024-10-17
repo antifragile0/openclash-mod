@@ -37,11 +37,14 @@ jobs:
             git checkout $COMMIT_WITH_SAME_MESSAGE -- "$file"
         done
 
-        sleep 1  # Memberi waktu untuk proses checkout
+        sleep 1
+
+        cd /home/runner/work/openclash-mod/openclash-mod/
         
-        # Clone repository tujuan
+        sleep 1
+        
         git clone https://github.com/${{ github.repository }} tmp/
-        mv master/* tmp/openclash-mod/  # Memindahkan file yang diambil ke direktori yang sesuai
+        mv master/* tmp/openclash-mod/
 
     - name: Commit and Push Changes
       run: |
