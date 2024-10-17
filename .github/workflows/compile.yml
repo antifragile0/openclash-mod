@@ -42,7 +42,7 @@ jobs:
         id: check_ipk_file
         run: |
           RELEASES_URL="https://api.github.com/repos/Maizil41/openclash-mod/releases/latest"
-          IPK_FILE="luci-app-openclash_0.46.033-beta_all.ipk"
+          IPK_FILE="$IPK_FILE"
           ASSETS_URL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $RELEASES_URL | jq -r '.assets_url')
           echo "Assets URL: $ASSETS_URL"
 
