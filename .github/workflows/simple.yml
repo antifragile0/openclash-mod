@@ -52,11 +52,6 @@ jobs:
           ./scripts/feeds update -a > /dev/null 2>&1
           ./scripts/feeds install -a > /dev/null 2>&1
 
-      - name: ⛏️ Compile po2lmo
-        run: |
-          cd sdk/package/${PKG_NAME}/tools/po2lmo
-          make && sudo make install
-
       - name: ⚙️ Configure & compile IPK
         run: |
           echo -e "\033[34m🔧 Configuring SDK \033[0m"
