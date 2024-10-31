@@ -10,8 +10,11 @@
 </div>
 <hr/>
 
-* Disclaimer! This is an unofficial openclash version
-* For the official version click here [@vernesong/OpenClash](https://github.com/vernesong/OpenClash)
+> [!WARNING]
+>
+> - **This is an unofficial openclash version**
+>   
+> - For the official version click here [@vernesong/OpenClash](https://github.com/vernesong/OpenClash)
 
 <hr/>
 
