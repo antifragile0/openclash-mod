@@ -3,7 +3,7 @@ local NXFS = require "nixio.fs"
 local SYS  = require "luci.sys"
 local HTTP = require "luci.http"
 
-m = Map("openclash", translate(""))
+m = Map("openclash", translate("Server Logs"))
 s = m:section(TypedSection, "openclash")
 m.pageaction = false
 s.anonymous = true

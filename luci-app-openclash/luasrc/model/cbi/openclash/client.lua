@@ -7,8 +7,8 @@ local UTIL = require "luci.util"
 local fs = require "luci.openclash"
 local uci = require("luci.model.uci").cursor()
 
-m = SimpleForm("openclash",translate(""))
-m.description = translate("")
+m = SimpleForm("openclash",translate("OpenClash"))
+m.description = translate("A Clash Client For OpenWrt")
 m.reset = false
 m.submit = false
 
@@ -53,9 +53,9 @@ for t,o in ipairs(fs.glob("/etc/openclash/config/*"))do
 			e[t].mtime=os.date("%Y-%m-%d %H:%M:%S",a.mtime)
 		end
 		if uci:get("openclash", "config", "config_path") and string.sub(uci:get("openclash", "config", "config_path"), 23, -1) == e[t].name then
-			e[t].state=translate("Enable")
+			e[t].state=translate("Enabled")
 		else
-			e[t].state=translate("Disable")
+			e[t].state=translate("Disabled")
 		end
 		e[t].check=translate(config_check(o))
 	end
@@ -154,6 +154,12 @@ o.write = function()
 	uci:commit("openclash")
 	SYS.call("/etc/init.d/openclash stop >/dev/null 2>&1 &")
 end
+
+d = SimpleForm("openclash")
+d.title = translate("Credits")
+d.reset = false
+d.submit = false
+d:section(SimpleSection).template  = "openclash/developer"
 
 dler = SimpleForm("openclash")
 dler.reset = false
