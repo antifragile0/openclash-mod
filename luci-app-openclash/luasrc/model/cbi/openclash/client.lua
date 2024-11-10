@@ -7,8 +7,8 @@ local UTIL = require "luci.util"
 local fs = require "luci.openclash"
 local uci = require("luci.model.uci").cursor()
 
-m = SimpleForm("openclash",translate(""))
-m.description = translate("")
+m = SimpleForm("openclash",translate("OpenClash"))
+m.description = translate("A Clash Client For OpenWrt")
 m.reset = false
 m.submit = false
 
@@ -154,6 +154,19 @@ o.write = function()
 	uci:commit("openclash")
 	SYS.call("/etc/init.d/openclash stop >/dev/null 2>&1 &")
 end
+
+d = SimpleForm("openclash")
+d.title = translate("Credits")
+d.reset = false
+d.submit = false
+d:section(SimpleSection).template  = "openclash/developer"
+
+dler = SimpleForm("openclash")
+dler.reset = false
+dler.submit = false
+dler:section(SimpleSection).template  = "openclash/dlercloud"
+
+m:append(Template("openclash/select_git_cdn"))
 
 if uci:get("openclash", "config", "dler_token") then
 	return m, dler, form, s, ap, d

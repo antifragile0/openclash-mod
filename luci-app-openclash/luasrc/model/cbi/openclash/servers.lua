@@ -9,9 +9,14 @@ font_off = [[</b>]]
 bold_on  = [[<strong>]]
 bold_off = [[</strong>]]
 
-m = Map(openclash,  translate(""))
+m = Map(openclash,  translate("Onekey Create (Servers&Groups manage)"))
 m.pageaction = false
-m.description=translate("")
+m.description=translate("Attention:")..
+"<br/>"..translate("1. Before modifying the configuration file, please click the button below to read the configuration file")..
+"<br/>"..translate("2. Proxy-providers address can be directly filled in the subscription link")..
+"<br/>"..
+"<br/>"..translate("Introduction to proxy usage: https://wiki.metacubex.one/config/proxies/")..
+"<br/>"..translate("Introduction to proxy-provider usage: https://wiki.metacubex.one/config/proxy-providers/")
 
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
@@ -250,8 +255,6 @@ o = a:option(Button,"Load_Config", " ")
 o.inputtitle = translate("Read Config")
 o.inputstyle = "apply"
 o.write = function()
-  m.uci:set("openclash", "config", "enable", 0)
-  m.uci:commit("openclash")
   luci.sys.call("/usr/share/openclash/yml_groups_get.sh 2>/dev/null &")
   luci.http.redirect(luci.dispatcher.build_url("admin", "services", "openclash"))
 end
@@ -261,8 +264,6 @@ o.inputtitle = translate("Commit Settings")
 o.inputstyle = "apply"
 o.write = function()
   fs.unlink("/tmp/Proxy_Group")
-  m.uci:set("openclash", "config", "enable", 0)
-  m.uci:commit("openclash")
 end
 
 o = a:option(Button, "Apply", " ")
@@ -270,10 +271,10 @@ o.inputtitle = translate("Apply Settings")
 o.inputstyle = "apply"
 o.write = function()
   fs.unlink("/tmp/Proxy_Group")
-  m.uci:set("openclash", "config", "enable", 0)
-  m.uci:commit("openclash")
   luci.sys.call("/usr/share/openclash/yml_groups_set.sh >/dev/null 2>&1 &")
   luci.http.redirect(luci.dispatcher.build_url("admin", "services", "openclash"))
 end
+
+m:append(Template("openclash/toolbar_show"))
 
 return m
