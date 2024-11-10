@@ -7,7 +7,7 @@ function index()
 
 	local page
 	
-	page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), 50)
+	page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), 1)
 	page.dependent = true
 	page.acl_depends = { "luci-app-openclash" }
 	entry({"admin", "services", "openclash", "client"},form("openclash/client"),_("Overviews"), 20).leaf = true
@@ -91,7 +91,8 @@ function index()
 	entry({"admin", "services", "openclash", "proxy-provider-config"},cbi("openclash/proxy-provider-config"), nil).leaf = true
 	entry({"admin", "services", "openclash", "rule-providers-config"},cbi("openclash/rule-providers-config"), nil).leaf = true
 	entry({"admin", "services", "openclash", "config"},form("openclash/config"),_("Config Manage"), 80).leaf = true
-	entry({"admin", "services", "openclash", "log"},cbi("openclash/log"),_("Server Logs"), 90).leaf = true
+entry({"admin", "services", "openclash", "oceditor"},template("openclash/oceditor"),_("Config Editor"), 90).leaf = true
+	entry({"admin", "services", "openclash", "log"},cbi("openclash/log"),_("Server Logs"), 100).leaf = true
 
 end
 local fs = require "luci.openclash"
@@ -830,12 +831,15 @@ end
 
 function action_toolbar_show_sys()
 	local pid = luci.sys.exec("pidof clash |head -1 |tr -d '\n' 2>/dev/null")
-	local cpu
+	local mem, cpu
 	if pid and pid ~= "" then
+		mem = tonumber(luci.sys.exec(string.format("cat /proc/%s/status 2>/dev/null |grep -w VmRSS |awk '{print $2}'", pid)))
 		cpu = luci.sys.exec(string.format("top -b -n1 |grep -E '%s' 2>/dev/null |grep -v grep |awk '{for (i=1;i<=NF;i++) {if ($i ~ /clash/) break; else cpu=i}}; {print $cpu}' 2>/dev/null", pid))
-		if cpu then
+		if mem and cpu then
+			mem = fs.filesize(mem*1024) or "0 KB"
 			cpu = string.match(cpu, "%d+") or "0"
 		else
+			mem = "0 KB"
 			cpu = "0"
 		end
 	else
@@ -843,6 +847,7 @@ function action_toolbar_show_sys()
 	end
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
+		mem = mem,
 		cpu = cpu;
 	})
 end

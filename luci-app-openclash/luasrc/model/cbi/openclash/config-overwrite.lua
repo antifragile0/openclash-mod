@@ -31,11 +31,9 @@ end
 if not lan_ip or lan_ip == "" then
 	lan_ip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 end
-m = Map("openclash", translate("Overwrite Settings"))
+m = Map("openclash", translate(""))
 m.pageaction = false
-m.description = translate("Note: To restore the default configuration, try accessing:").." <a href='javascript:void(0)' onclick='javascript:restore_config(this)'>http://"..lan_ip.."/cgi-bin/luci/admin/services/openclash/restore</a>"..
-"<br/>"..font_green..translate("For More Useful Meta Core Functions Go Wiki")..": "..font_off.."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://wiki.metacubex.one/\")'>"..translate("https://wiki.metacubex.one/").."</a>"
-
+m.description = translate("")
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
 
@@ -291,6 +289,14 @@ o.default = "0"
 
 o = s:taboption("meta", Flag, "enable_unified_delay", font_red..bold_on..translate("Enable Unified Delay")..bold_off..font_off)
 o.description = font_red..bold_on..translate("Change The Delay Calculation Method To Remove Extra Delays Such as Handshaking")..bold_off..font_off
+o.default = "0"
+
+o = s:taboption("meta", ListValue, "keep_alive_interval", font_red..bold_on..translate("TCP Keep-alive Interval(s)")..bold_off..font_off)
+o.description = font_red..bold_on..translate("Change The TCP Keep-alive Interval, Selecting a Larger Value Avoids Abnormal Resource Consumption")..bold_off..font_off
+o:value("0", translate("Disable"))
+o:value("15")
+o:value("1800")
+o:value("3600")
 o.default = "0"
 
 o = s:taboption("meta", ListValue, "find_process_mode", translate("Enable Process Rule"))
@@ -575,7 +581,6 @@ o.write = function()
 end
 
 m:append(Template("openclash/config_editor"))
-m:append(Template("openclash/toolbar_show"))
 
 return m
 
