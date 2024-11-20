@@ -32,6 +32,7 @@ end
 m = Map("openclash", translate(""))
 m.pageaction = false
 m.description = translate("")
+
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
 
@@ -41,6 +42,7 @@ s:tab("dns", "DNS "..translate("Settings"))
 s:tab("stream_enhance", translate("Streaming Enhance"))
 s:tab("lan_ac", translate("Black&White"))
 s:tab("dashboard", translate("Dashboard Settings"))
+s:tab("ipv6", translate("IPv6 Settings"))
 s:tab("rules_update", translate("Rules Update"))
 s:tab("geo_update", translate("GEO Update"))
 s:tab("chnr_update", translate("Chnroute Update"))
@@ -48,6 +50,7 @@ s:tab("auto_restart", translate("Auto Restart"))
 s:tab("version_update", translate("Version Update"))
 s:tab("developer", translate("Developer Settings"))
 s:tab("debug", translate("Debug Logs"))
+s:tab("dlercloud", translate("Dler Cloud"))
 
 o = s:taboption("op_mode", ListValue, "en_mode", font_red..bold_on..translate("Select Mode")..bold_off..font_off)
 o.description = translate("Select Mode For OpenClash Work, Try Flush DNS Cache If Network Error")
@@ -1081,6 +1084,88 @@ o = s:taboption("dashboard", DummyValue, "Metacubexd", translate("Update Metacub
 o.template="openclash/switch_dashboard"
 o.rawhtml = true
 
+---- ipv6
+o = s:taboption("ipv6", Flag, "ipv6_enable", translate("Proxy IPv6 Traffic"))
+o.description = font_red..bold_on..translate("The Gateway and DNS of The Connected Device Must be The Router IP, Disable IPv6 DHCP To Avoid Abnormal Connection If You Do Not Use")..bold_off..font_off
+o.default = 0
+
+o = s:taboption("ipv6", ListValue, "ipv6_mode", translate("IPv6 Proxy Mode"))
+o:value("0", translate("TProxy Mode"))
+o:value("1", translate("Redirect Mode"))
+o:value("2", translate("TUN Mode")..translate("(Only Meta Core)"))
+o:value("3", translate("Mix Mode")..translate("(Only Meta Core)"))
+o.default = "0"
+o:depends("ipv6_enable", "1")
+
+o = s:taboption("ipv6", ListValue, "stack_type_v6", translate("Select Stack Type"))
+o.description = translate("Select Stack Type For TUN Mode, According To The Running Speed on Your Machine")
+o:depends({ipv6_mode= "2", en_mode = "redir-host"})
+o:depends({ipv6_mode= "2", en_mode = "fake-ip"})
+o:depends({ipv6_mode= "3", en_mode = "redir-host"})
+o:depends({ipv6_mode= "3", en_mode = "fake-ip"})
+o:value("system", translate("System　"))
+o:value("gvisor", translate("gVisor"))
+o:value("mixed", translate("Mixed")..translate("(Only Meta Core)"))
+o.default = "system"
+
+o = s:taboption("ipv6", Flag, "enable_v6_udp_proxy", translate("Proxy UDP Traffics"))
+o.description = translate("The Servers Must Support UDP forwarding").."<br>"..font_red..bold_on..translate("If Docker is Installed, UDP May Not Forward Normally")..bold_off..font_off
+o:depends("ipv6_mode", "0")
+o:depends("ipv6_mode", "1")
+o.default = 1
+
+o = s:taboption("ipv6", Flag, "ipv6_dns", translate("IPv6 DNS Resolve"))
+o.description = translate("Enable to Resolve IPv6 DNS Requests")
+o.default = 0
+
+o = s:taboption("ipv6", ListValue, "china_ip6_route", translate("China IPv6 Route"))
+o.description = translate("Bypass Specified Regions Network Flows, Improve Performance, If Inaccessibility on Bypass Gateway, Try to Enable Bypass Gateway Compatible Option")
+o.default = 0
+o:value("0", translate("Disable"))
+o:value("1", translate("Bypass Mainland China"))
+o:value("2", translate("Bypass Overseas"))
+o:depends("ipv6_enable", "1")
+
+o = s:taboption("ipv6", Value, "local_network6_pass", translate("Local IPv6 Network Bypassed List"))
+o.template = "cbi/tvalue"
+o.description = translate("The Traffic of The Destination For The Specified Address Will Not Pass The Core")
+o.rows = 20
+o.wrap = "off"
+o:depends("ipv6_enable", "1")
+
+function o.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_custom_localnetwork_ipv6.list") or ""
+end
+function o.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_custom_localnetwork_ipv6.list")
+	  if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_custom_localnetwork_ipv6.list", value)
+		end
+	end
+end
+
+o = s:taboption("ipv6", Value, "chnroute6_pass", translate("Chnroute6 Bypassed List"))
+o.template = "cbi/tvalue"
+o.description = translate("Domains or IPs in The List Will Not be Affected by The China IP Route Option, Depend on Dnsmasq")
+o.rows = 20
+o.wrap = "off"
+o:depends({ipv6_enable = "1", enable_redirect_dns = "1"})
+
+function o.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_custom_chnroute6_pass.list") or ""
+end
+function o.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_custom_chnroute6_pass.list")
+		if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_custom_chnroute6_pass.list", value)
+		end
+	end
+end
+
 ---- version update
 core_update = s:taboption("version_update", DummyValue, "", nil)
 core_update.template = "openclash/update"
@@ -1108,6 +1193,54 @@ end
 ---- debug
 o = s:taboption("debug", DummyValue, "", nil)
 o.template = "openclash/debug"
+
+---- dlercloud
+o = s:taboption("dlercloud", Value, "dler_email")
+o.title = translate("Account Email Address")
+o.rmempty = true
+
+o = s:taboption("dlercloud", Value, "dler_passwd")
+o.title = translate("Account Password")
+o.password = true
+o.rmempty = true
+
+if m.uci:get("openclash", "config", "dler_token") then
+	o = s:taboption("dlercloud", Flag, "dler_checkin")
+	o.title = translate("Checkin")
+	o.default = 0
+	o.rmempty = true
+end
+
+o = s:taboption("dlercloud", Value, "dler_checkin_interval")
+o.title = translate("Checkin Interval (hour)")
+o:depends("dler_checkin", "1")
+o.default = "1"
+o.rmempty = true
+
+o = s:taboption("dlercloud", Value, "dler_checkin_multiple")
+o.title = translate("Checkin Multiple")
+o.datatype = "uinteger"
+o.default = "1"
+o:depends("dler_checkin", "1")
+o.rmempty = true
+o.description = font_green..bold_on..translate("Multiple Must Be a Positive Integer and No More Than 50")..bold_off..font_off
+function o.validate(self, value)
+	if tonumber(value) < 1 then
+		return "1"
+	end
+	if tonumber(value) > 50 then
+		return "50"
+	end
+	return value
+end
+
+o = s:taboption("dlercloud", DummyValue, "dler_login", translate("Account Login"))
+o.template = "openclash/dler_login"
+if m.uci:get("openclash", "config", "dler_token") then
+	o.value = font_green..bold_on..translate("Account logged in")..bold_off..font_off
+else
+	o.value = font_red..bold_on..translate("Account not logged in")..bold_off..font_off
+end
 
 local t = {
     {Commit, Apply}

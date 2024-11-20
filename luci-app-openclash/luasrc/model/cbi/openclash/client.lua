@@ -155,6 +155,13 @@ o.write = function()
 	SYS.call("/etc/init.d/openclash stop >/dev/null 2>&1 &")
 end
 
+dler = SimpleForm("openclash")
+dler.reset = false
+dler.submit = false
+dler:section(SimpleSection).template  = "openclash/dlercloud"
+
+m:append(Template("openclash/select_git_cdn"))
+
 if uci:get("openclash", "config", "dler_token") then
 	return m, dler, form, s, ap, d
 else
