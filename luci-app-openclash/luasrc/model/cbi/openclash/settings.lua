@@ -32,7 +32,6 @@ end
 m = Map("openclash", translate(""))
 m.pageaction = false
 m.description = translate("")
-
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
 
@@ -488,28 +487,6 @@ o.template = "openclash/other_stream_option"
 o.value = "Amazon Prime Video"
 o:depends("stream_auto_select_prime_video", "1")
 
---HBO Now
-o = s:taboption("stream_enhance", Flag, "stream_auto_select_hbo_now", font_red..translate("HBO Now")..font_off)
-o.default = 0
-o:depends("stream_auto_select", "1")
-
-o = s:taboption("stream_enhance", Value, "stream_auto_select_group_key_hbo_now", translate("Group Filter"))
-o.default = "HBO|HBONow|HBO Now"
-o.placeholder = "HBO|HBONow|HBO Now"
-o.description = translate("It Will Be Searched According To The Regex When Auto Search Group Fails")
-o:depends("stream_auto_select_hbo_now", "1")
-
-o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_hbo_now", translate("Unlock Nodes Filter"))
-o.default = ""
-o.description = translate("It Will Be Selected Nodes According To The Regex")
-o:depends("stream_auto_select_hbo_now", "1")
-
-o = s:taboption("stream_enhance", DummyValue, "HBO Now", translate("Manual Test"))
-o.rawhtml = true
-o.template = "openclash/other_stream_option"
-o.value = "HBO Now"
-o:depends("stream_auto_select_hbo_now", "1")
-
 --HBO Max
 o = s:taboption("stream_enhance", Flag, "stream_auto_select_hbo_max", font_red..translate("HBO Max")..font_off)
 o.default = 0
@@ -543,40 +520,6 @@ o.rawhtml = true
 o.template = "openclash/other_stream_option"
 o.value = "HBO Max"
 o:depends("stream_auto_select_hbo_max", "1")
-
---HBO GO Asia
-o = s:taboption("stream_enhance", Flag, "stream_auto_select_hbo_go_asia", font_red..translate("HBO GO Asia")..font_off)
-o.default = 0
-o:depends("stream_auto_select", "1")
-
-o = s:taboption("stream_enhance", Value, "stream_auto_select_group_key_hbo_go_asia", translate("Group Filter"))
-o.default = "HBO|HBOGO|HBO GO"
-o.placeholder = "HBO|HBOGO|HBO GO"
-o.description = translate("It Will Be Searched According To The Regex When Auto Search Group Fails")
-o:depends("stream_auto_select_hbo_go_asia", "1")
-
-o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_hbo_go_asia", translate("Unlock Region Filter"))
-o.default = ""
-o.placeholder = "HK|SG|TW"
-o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
-o:depends("stream_auto_select_hbo_go_asia", "1")
-function o.validate(self, value)
-	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_hbo_go_asia") then
-		fs.unlink("/tmp/openclash_HBO GO Asia_region")
-	end
-	return value
-end
-
-o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_hbo_go_asia", translate("Unlock Nodes Filter"))
-o.default = ""
-o.description = translate("It Will Be Selected Nodes According To The Regex")
-o:depends("stream_auto_select_hbo_go_asia", "1")
-
-o = s:taboption("stream_enhance", DummyValue, "HBO GO Asia", translate("Manual Test"))
-o.rawhtml = true
-o.template = "openclash/other_stream_option"
-o.value = "HBO GO Asia"
-o:depends("stream_auto_select_hbo_go_asia", "1")
 
 --TVB Anywhere+
 o = s:taboption("stream_enhance", Flag, "stream_auto_select_tvb_anywhere", font_red..translate("TVB Anywhere+")..font_off)
@@ -779,7 +722,7 @@ o:depends("stream_auto_select", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_group_key_openai", translate("Group Filter"))
 o.default = "OpenAI|ChatGPT"
-o.placeholder = "OpenAI|ChatGPT"
+o.placeholder = "OpenAI|ChatGPT|AI"
 o.description = translate("It Will Be Searched According To The Regex When Auto Search Group Fails")
 o:depends("stream_auto_select_openai", "1")
 
@@ -1269,5 +1212,4 @@ m:append(Template("openclash/config_editor"))
 m:append(Template("openclash/select_git_cdn"))
 
 return m
-
 

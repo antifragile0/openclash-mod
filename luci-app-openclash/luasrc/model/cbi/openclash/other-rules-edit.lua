@@ -150,17 +150,6 @@ end
 o:value("DIRECT")
 o:value("REJECT")
 
-o = s:option(ListValue, "HBOGo", translate("HBO Go"))
-o:depends("rule_name", "lhie1")
-o.rmempty = true
-for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
-  if groupname ~= nil and groupname ~= "" then
-    o:value(groupname)
-  end
-end
-o:value("DIRECT")
-o:value("REJECT")
-
 o = s:option(ListValue, "Pornhub", translate("Pornhub"))
 o:depends("rule_name", "lhie1")
 o.rmempty = true
@@ -381,6 +370,17 @@ end
 o:value("DIRECT")
 o:value("REJECT")
 
+o = s:option(ListValue, "HTTPDNS", translate("HTTPDNS"))
+o:depends("rule_name", "lhie1")
+o.rmempty = true
+for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
+  if groupname ~= nil and groupname ~= "" then
+    o:value(groupname)
+  end
+end
+o:value("DIRECT")
+o:value("REJECT")
+
 o = s:option(ListValue, "Domestic", translate("Domestic"))
 o:depends("rule_name", "lhie1")
 o.rmempty = true
@@ -427,4 +427,5 @@ o.write = function()
   luci.http.redirect(m.redirect)
 end
 
+m:append(Template("openclash/toolbar_show"))
 return m
