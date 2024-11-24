@@ -5,7 +5,7 @@
 
 <div align="center">
   <img alt="License" src="https://img.shields.io/github/license/Maizil41/openclash-mod?style=for-the-badge&logo=github">
-  <a target="_blank" href="https://github.com/Maizil41/openclash-mod/releases"><img src="https://img.shields.io/github/release/Maizil41/openclash-mod?style=for-the-badge&logo=github"></a>
+  <a target="_blank" href="https://github.com/Maizil41/openclash-mod/releases"><img src="https://img.shields.io/github/release/Maizil41/openclash-mod?style=for-the-badge&logo=github&color=blue"></a>
   <a target="_blank" href="https://github.com/Maizil41/openclash-mod/releases"><img src="https://img.shields.io/github/downloads/Maizil41/openclash-mod/total?style=for-the-badge&logo=github"></a>
 </div>
 <hr/>
