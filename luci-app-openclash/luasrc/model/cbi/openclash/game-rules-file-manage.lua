@@ -23,7 +23,7 @@ g[n].enable=false
 end
 end
 
-rule_form=SimpleForm("game_rules_file_list",translate("Game Rules File List"))
+rule_form=SimpleForm("game_rules_file_list",translate(""))
 rule_form.reset=false
 rule_form.submit=false
 tb2=rule_form:section(Table,g)

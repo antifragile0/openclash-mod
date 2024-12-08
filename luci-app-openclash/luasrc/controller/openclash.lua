@@ -7,7 +7,7 @@ function index()
 
 	local page
 	
-	page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), 1)
+	page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), -10)
 	page.dependent = true
 	page.acl_depends = { "luci-app-openclash" }
 	entry({"admin", "services", "openclash", "client"},form("openclash/client"),_("Overviews"), 20).leaf = true
@@ -91,7 +91,7 @@ function index()
 	entry({"admin", "services", "openclash", "proxy-provider-config"},cbi("openclash/proxy-provider-config"), nil).leaf = true
 	entry({"admin", "services", "openclash", "rule-providers-config"},cbi("openclash/rule-providers-config"), nil).leaf = true
 	entry({"admin", "services", "openclash", "config"},form("openclash/config"),_("Config Manage"), 80).leaf = true
-entry({"admin", "services", "openclash", "oceditor"},template("openclash/oceditor"),_("Config Editor"), 90).leaf = true
+	entry({"admin", "services", "openclash", "oceditor"},template("openclash/oceditor"),_("Config Editor"), 90).leaf = true
 	entry({"admin", "services", "openclash", "log"},cbi("openclash/log"),_("Server Logs"), 100).leaf = true
 
 end
@@ -105,6 +105,8 @@ local device_arh = luci.sys.exec("uname -m |tr -d '\n'")
 
 if pcall(require, "luci.model.ipkg") then
 	opkg = require "luci.model.ipkg"
+else
+	opkg = nil
 end
 
 local core_path_mode = uci:get("openclash", "config", "small_flash_memory")
@@ -159,19 +161,8 @@ local function chnroutev6()
 end
 
 local function daip()
-	local daip, lan_int_name
-	lan_int_name = uci:get("openclash", "config", "lan_interface_name") or "0"
-	if lan_int_name == "0" then
-		daip = luci.sys.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
-	else
-		daip = luci.sys.exec(string.format("ip address show %s | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n'", lan_int_name))
-	end
-	if not daip or daip == "" then
-		daip = luci.sys.exec("ip address show $(uci -q -p /tmp/state get network.lan.ifname || uci -q -p /tmp/state get network.lan.device) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n'")
-	end
-	if not daip or daip == "" then
-		daip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
-	end
+	local daip
+	daip = fs.lanip()
 	return daip
 end
 
@@ -213,11 +204,23 @@ local function startlog()
 	return line_trans
 end
 
+local function pkg_type()
+	if fs.access("/usr/bin/apk") then
+		return "apk"
+	else
+		return "opkg"
+	end
+end
+
 local function coremodel()
 	if opkg and opkg.info("libc") and opkg.info("libc")["libc"] then
 		return opkg.info("libc")["libc"]["Architecture"]
 	else
-		return luci.sys.exec("rm -f /var/lock/opkg.lock && opkg status libc 2>/dev/null |grep 'Architecture' |awk -F ': ' '{print $2}' 2>/dev/null")
+		if fs.access("/bin/opkg") then
+			return luci.sys.exec("rm -f /var/lock/opkg.lock && opkg status libc 2>/dev/null |grep 'Architecture' |awk -F ': ' '{print $2}' 2>/dev/null")
+		elseif fs.access("/usr/bin/apk") then
+			return luci.sys.exec("apk list libc 2>/dev/null |awk '{print $2}'")
+		end
 	end
 end
 
@@ -247,7 +250,11 @@ local function opcv()
 	if opkg and opkg.info("luci-app-openclash") and opkg.info("luci-app-openclash")["luci-app-openclash"] then
 		return "v" .. opkg.info("luci-app-openclash")["luci-app-openclash"]["Version"]
 	else
-		return luci.sys.exec("rm -f /var/lock/opkg.lock && opkg status luci-app-openclash 2>/dev/null |grep 'Version' |awk -F 'Version: ' '{print \"v\"$2}'")
+		if fs.access("/bin/opkg") then
+			return luci.sys.exec("rm -f /var/lock/opkg.lock && opkg status luci-app-openclash 2>/dev/null |grep 'Version' |awk -F 'Version: ' '{print \"v\"$2}'")
+		elseif fs.access("/usr/bin/apk") then
+			return "v" .. luci.sys.exec("apk list luci-app-openclash 2>/dev/null |grep 'installed' | grep -oE '\\d+(\\.\\d+)*' | head -1")
+		end
 	end
 end
 
@@ -831,15 +838,12 @@ end
 
 function action_toolbar_show_sys()
 	local pid = luci.sys.exec("pidof clash |head -1 |tr -d '\n' 2>/dev/null")
-	local mem, cpu
+	local cpu
 	if pid and pid ~= "" then
-		mem = tonumber(luci.sys.exec(string.format("cat /proc/%s/status 2>/dev/null |grep -w VmRSS |awk '{print $2}'", pid)))
 		cpu = luci.sys.exec(string.format("top -b -n1 |grep -E '%s' 2>/dev/null |grep -v grep |awk '{for (i=1;i<=NF;i++) {if ($i ~ /clash/) break; else cpu=i}}; {print $cpu}' 2>/dev/null", pid))
-		if mem and cpu then
-			mem = fs.filesize(mem*1024) or "0 KB"
+		if cpu then
 			cpu = string.match(cpu, "%d+") or "0"
 		else
-			mem = "0 KB"
 			cpu = "0"
 		end
 	else
@@ -847,7 +851,6 @@ function action_toolbar_show_sys()
 	end
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
-		mem = mem,
 		cpu = cpu;
 	})
 end
@@ -1085,6 +1088,7 @@ function action_update_ma()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
 			oplv = oplv(),
+			pkg_type = pkg_type(),
 			corelv = corelv(),
 			corever = corever();
 	})
