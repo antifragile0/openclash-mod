@@ -158,4 +158,5 @@ o.write = function()
    luci.http.redirect(m.redirect)
 end
 
+m:append(Template("openclash/toolbar_show"))
 return m

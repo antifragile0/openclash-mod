@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-openclash
-PKG_VERSION:=0.46.054
+PKG_VERSION:=0.46.059
 PKG_MAINTAINER:=vernesong <https://github.com/vernesong/OpenClash>
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -127,6 +127,7 @@ define Package/$(PKG_NAME)/postrm
 	DNSMASQ_CONF_DIR=$(grep '^conf-dir=' "$DNSMASQ_CONF_PATH" | cut -d'=' -f2 | head -n 1)
 	DNSMASQ_CONF_DIR=${DNSMASQ_CONF_DIR%*/}
 	rm -rf /etc/openclash >/dev/null 2>&1
+	rm -rf /etc/config/openclash >/dev/null 2>&1
 	rm -rf /tmp/openclash.log >/dev/null 2>&1
 	rm -rf /tmp/openclash_start.log >/dev/null 2>&1
 	rm -rf /tmp/openclash_last_version >/dev/null 2>&1

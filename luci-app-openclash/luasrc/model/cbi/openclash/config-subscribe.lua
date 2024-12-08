@@ -145,5 +145,4 @@ o.write = function()
   HTTP.redirect(DISP.build_url("admin", "services", "openclash"))
 end
 
-
 return m
