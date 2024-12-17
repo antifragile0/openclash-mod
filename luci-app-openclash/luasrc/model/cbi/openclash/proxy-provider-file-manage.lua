@@ -119,4 +119,5 @@ o.write = function()
   HTTP.redirect(DISP.build_url("admin", "services", "openclash", "config"))
 end
 
+--- proxy_form:append(Template("openclash/toolbar_show"))
 return proxy_form

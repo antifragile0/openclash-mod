@@ -91,7 +91,7 @@ function index()
 	entry({"admin", "services", "openclash", "proxy-provider-config"},cbi("openclash/proxy-provider-config"), nil).leaf = true
 	entry({"admin", "services", "openclash", "rule-providers-config"},cbi("openclash/rule-providers-config"), nil).leaf = true
 	entry({"admin", "services", "openclash", "config"},form("openclash/config"),_("Config Manage"), 80).leaf = true
-	entry({"admin", "services", "openclash", "oceditor"},template("openclash/oceditor"),_("Config Editor"), 90).leaf = true
+	entry({"admin", "services", "openclash", "editor"},template("openclash/oceditor"),_("Config Editor"), 90).leaf = true
 	entry({"admin", "services", "openclash", "log"},cbi("openclash/log"),_("Server Logs"), 100).leaf = true
 
 end
@@ -180,11 +180,6 @@ end
 
 local function db_foward_ssl()
 	return uci:get("openclash", "config", "dashboard_forward_ssl") or 0
-end
-
-local function check_lastversion()
-	luci.sys.exec("bash /usr/share/openclash/openclash_version.sh 2>/dev/null")
-	return luci.sys.exec("sed -n '/^https:/,$p' /tmp/openclash_last_version 2>/dev/null")
 end
 
 local function startlog()
@@ -622,10 +617,18 @@ function set_subinfo_url()
 end
 
 function sub_info_get()
-	local filepath, filename, sub_url, sub_info, info, upload, download, total, expire, http_code, len, percent, day_left, day_expire, surplus, used
+	local sub_ua, filepath, filename, sub_url, sub_info, info, upload, download, total, expire, http_code, len, percent, day_left, day_expire, surplus, used
 	local info_tb = {}
 	filename = luci.http.formvalue("filename")
 	sub_info = ""
+	sub_ua = "Clash"
+	uci:foreach("openclash", "config_subscribe",
+		function(s)
+			if s.name == filename and s.sub_ua then
+				sub_ua = s.sub_ua
+			end
+		end
+	)
 	if filename and not is_start() then
 		uci:foreach("openclash", "subscribe_info",
 			function(s)
@@ -648,7 +651,7 @@ function sub_info_get()
 		if not sub_url then
 			sub_info = "No Sub Info Found"
 		else
-			info = luci.sys.exec(string.format("curl -sLI -X GET -m 10 -w 'http_code='%%{http_code} -H 'User-Agent: Clash' '%s'", sub_url))
+			info = luci.sys.exec(string.format("curl -sLI -X GET -m 10 -w 'http_code='%%{http_code} -H 'User-Agent: %s' '%s'", sub_ua, sub_url))
 			if not info or tonumber(string.sub(string.match(info, "http_code=%d+"), 11, -1)) ~= 200 then
 				info = luci.sys.exec(string.format("curl -sLI -X GET -m 10 -w 'http_code='%%{http_code} -H 'User-Agent: Quantumultx' '%s'", sub_url))
 			end
