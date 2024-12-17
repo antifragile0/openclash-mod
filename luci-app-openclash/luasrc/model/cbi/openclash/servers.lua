@@ -11,7 +11,12 @@ bold_off = [[</strong>]]
 
 m = Map(openclash,  translate(""))
 m.pageaction = false
-m.description=translate("")
+--- m.description=translate("Attention:")..
+--- "<br/>"..translate("1. Before modifying the configuration file, please click the button below to read the configuration file")..
+--- "<br/>"..translate("2. Proxy-providers address can be directly filled in the subscription link")..
+--- "<br/>"..
+--- "<br/>"..translate("Introduction to proxy usage: https://wiki.metacubex.one/config/proxies/")..
+--- "<br/>"..translate("Introduction to proxy-provider usage: https://wiki.metacubex.one/config/proxy-providers/")
 
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
@@ -24,8 +29,6 @@ o = s:option(ListValue, "rule_sources", translate("Choose Template For Create Co
 o.description = translate("Use Other Rules To Create Config")
 o:depends("create_config", 1)
 o:value("lhie1", translate("lhie1 Rules"))
-o:value("ConnersHua", translate("ConnersHua(Provider-type) Rules"))
-o:value("ConnersHua_return", translate("ConnersHua Return Rules"))
 
 o = s:option(Flag, "mix_proxies", translate("Mix Proxies"))
 o.description = font_red .. bold_on .. translate("Mix This Page's Proxies") .. bold_off .. font_off
@@ -272,5 +275,7 @@ o.write = function()
 	luci.sys.call("/usr/share/openclash/yml_groups_set.sh >/dev/null 2>&1 &")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "services", "openclash"))
 end
+
+--- m:append(Template("openclash/toolbar_show"))
 
 return m
