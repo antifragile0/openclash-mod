@@ -55,9 +55,11 @@ jobs:
 
       - name: ⛏️ Compile po2lmo
         run: |
-          cd sdk/package/${PKG_NAME}/tools/po2lmo
+          cd sdk/package/
+          pushd luci-app-openclash/tools/po2lmo
           make && sudo make install
-
+          popd
+          
       - name: ⚙️ Configure & compile APK
         run: |
           echo -e "\033[34m🔧 Configuring SDK \033[0m"
