@@ -1,8 +1,8 @@
 <head>
 <style>
 .arrow-down{cursor:pointer;display:inline-block;width:0;height:0;border-style:solid;border-width:10px;border-color:#417ab4 #fff0 #fff0 #fff0}.radio-button{display:none;white-space:nowrap;background-color:#547185;border-radius:4px}.radio-button input[type="radio"]{display:none}.radio-button label{display:inline-block;font-size:12px;padding:2px 3px;color:#fff;cursor:pointer;border-radius:4px}.radio-button input[type="radio"]:checked+label{background-color:#006786}
+#flag{display:flex;justify-content:center;align-items:center;height:150px}#flag img{max-width:100%;max-height:100%;width:auto;height:auto}
 </style>
-<style>#flag{display:flex;justify-content:center;align-items:center;height:150px}#flag img{max-width:100%;max-height:100%;width:auto;height:auto}</style>
 </head>
 <%
 	local uci = require("luci.model.uci").cursor()
@@ -222,6 +222,7 @@
 	var luci_protocol;
 	var ws_t;
 	var ws_c;
+	var ws_m;
 	var state_refresh;
 	var s;
 	var gr;
@@ -236,9 +237,9 @@
 			clash.innerHTML = status.clash ? '<b style=color:green>' + status.core_type +'&nbsp;&nbsp;&nbsp;<%:Running%></b>' : '<b style=color:red><%:Not Running%></b>';
 			watchdog.innerHTML = status.watchdog ? '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<%:Daemons%>:&nbsp;&nbsp;&nbsp;<b style=color:green><%:Running%></b>' : '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<%:Daemons%>:&nbsp;&nbsp;&nbsp;<b style=color:red><%:Not Running%></b>';
 			dase.innerHTML = status.dase ? "<b style=color:green>"+status.dase+"</b>" : "<b style=color:red>"+"<%:Not Set%>"+"</b>";
-			web.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:YACD PANEL%>" onclick="return ycad_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
-			webo.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:DASHBOARD%>" onclick="return net_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
-			webm.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:METACUBEXD%>" onclick="return meta_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
+			web.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Yacd Panel%>" onclick="return ycad_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
+			webo.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Dashboard%>" onclick="return net_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
+			webm.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Metacubexd%>" onclick="return meta_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			close_all_connection.innerHTML = status.clash ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Close All Connections%>" onclick="return b_close_all_connection(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			reload_firewall.innerHTML = status.clash ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Reload Firewall Rules%>" onclick="return b_reload_firewall(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			flush_fakeip_cache.innerHTML = status.clash ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Flush Fake-IP Cache%>" onclick="return b_flush_fakeip_cache(this)"/>' : '<b style=color:red><%:Not Running%></b>';
@@ -282,10 +283,15 @@
 			};
 			
 			function ws_open() {
+				if (ws_t) {ws_t.close();}
+				if (ws_c) {ws_c.close();}
+				if (ws_m) {ws_m.close();}
 				ws_t = new WebSocket(luci_protocol+"/traffic?token="+status.dase);
 				ws_c = new WebSocket(luci_protocol+"/connections?token="+status.dase);
+				ws_m = new WebSocket(luci_protocol+"/memory?token="+status.dase);
 				ws_t.onmessage = ws_tmessage;
 				ws_c.onmessage = ws_cmessage;
+				ws_m.onmessage = ws_mmessage;
 				ws_t.onerror = ws_terror;
 				ws_t.onopen = function (event) {
 					ws_connect = true;
@@ -599,7 +605,6 @@
 	function show_sys() {
 		XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "toolbar_show_sys")%>', null, function(x, status) {
 			if (x && x.status == 200 && x.responseText != "") {
-				document.getElementById("mem_t").innerHTML = "<font style=\"color:green\">"+status.mem+"</font>";
 				if (status.cpu <= 50) {
 					document.getElementById("cpu_t").innerHTML = "<font style=\"color:green\">"+status.cpu+" %</font>";
 				}
@@ -614,7 +619,6 @@
 				}
 			}
 			else {
-				document.getElementById("mem_t").innerHTML = "<font style=\"color:green\">0 KB</font>";
 				document.getElementById("cpu_t").innerHTML = "<font style=\"color:green\">0 %</font>";
 			}
 		});
@@ -655,6 +659,16 @@
 		}
 		else {
 			document.getElementById("connect_t").innerHTML = "<font style=\"color:green\">0</font>";
+		}
+	};
+
+	function ws_mmessage(event) {
+		var data = JSON.parse(event.data)
+		if (data.inuse) {
+			document.getElementById("mem_t").innerHTML = "<font style=\"color:green\">"+bytesToSize(data.inuse)+"</font>";
+		}
+		else {
+			document.getElementById("mem_t").innerHTML = "<font style=\"color:green\">0 KB</font>";
 		}
 		show_sys();
 	};
@@ -828,7 +842,7 @@
     {
         XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "status")%>', null, function(x, status) {
         btn.disabled = true;
-        btn.value    = '<%:METACUBEXD%>';
+        btn.value    = '<%:Metacubexd%>';
         if (status.daip && window.location.hostname == status.daip) {
             url9='<%="http://'+window.location.hostname+':'+status.cn_port+'/ui/metacubexd/#/setup?hostname='+ window.location.hostname + '&port=' + status.cn_port + '&secret=' + status.dase +'"%>';
         }
@@ -848,7 +862,7 @@
     {
         XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "status")%>', null, function(x, status) {
         btn.disabled = true;
-        btn.value    = '<%:YACD PANEL%>';
+        btn.value    = '<%:Yacd Panel%>';
         if (status.daip && window.location.hostname == status.daip) {
             url1='<%="http://'+window.location.hostname+':'+status.cn_port+'/ui/yacd/?hostname='+ window.location.hostname + '&port=' + status.cn_port + '&secret=' + status.dase +'"%>';
         }
@@ -868,7 +882,7 @@
     {
         XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "status")%>', null, function(x, status) {
         btn.disabled = true;
-        btn.value    = '<%:DASHBOARD%>';
+        btn.value    = '<%:Dashboard%>';
         if (status.daip && window.location.hostname == status.daip) {
             url2='<%="http://'+window.location.hostname+':'+status.cn_port+'/ui/dashboard/#/?host='+ window.location.hostname + '&port=' + status.cn_port + '&secret=' + status.dase +'"%>';
         }
