@@ -7,7 +7,7 @@ function index()
 
 	local page
 	
-	page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), -1)
+	page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), -10)
 	page.dependent = true
 	page.acl_depends = { "luci-app-openclash" }
 	entry({"admin", "services", "openclash", "client"},form("openclash/client"),_("Overviews"), 20).leaf = true
@@ -23,7 +23,6 @@ function index()
 	entry({"admin", "services", "openclash", "update_other_rules"},call("action_update_other_rules"))
 	entry({"admin", "services", "openclash", "update_geoip"},call("action_update_geoip"))
 	entry({"admin", "services", "openclash", "update_geosite"},call("action_update_geosite"))
-	entry({"admin", "services", "openclash", "lastversion"},call("action_lastversion"))
 	entry({"admin", "services", "openclash", "save_corever_branch"},call("action_save_corever_branch"))
 	entry({"admin", "services", "openclash", "update"},call("action_update"))
 	entry({"admin", "services", "openclash", "update_info"},call("action_update_info"))
@@ -371,6 +370,8 @@ function action_restore_config()
 	luci.sys.call("cp /usr/share/openclash/backup/openclash_force_sniffing* /etc/openclash/custom/ >/dev/null 2>&1 &")
 	luci.sys.call("cp /usr/share/openclash/backup/openclash_sniffing* /etc/openclash/custom/ >/dev/null 2>&1 &")
 	luci.sys.call("cp /usr/share/openclash/backup/yml_change.sh /usr/share/openclash/yml_change.sh >/dev/null 2>&1 &")
+	luci.sys.call("cp /usr/share/openclash/backup/china_ip_route.ipset /etc/openclash/china_ip_route.ipset >/dev/null 2>&1 &")
+	luci.sys.call("cp /usr/share/openclash/backup/china_ip6_route.ipset /etc/openclash/china_ip6_route.ipset >/dev/null 2>&1 &")
 	luci.sys.call("rm -rf /etc/openclash/history/* >/dev/null 2>&1 &")
 end
 
@@ -1075,13 +1076,6 @@ function action_state()
 		historychecktime = historychecktime(),
 		chnroutev6 = chnroutev6(),
 		chnroute = chnroute();
-	})
-end
-
-function action_lastversion()
-	luci.http.prepare_content("application/json")
-	luci.http.write_json({
-			lastversion = check_lastversion();
 	})
 end
 

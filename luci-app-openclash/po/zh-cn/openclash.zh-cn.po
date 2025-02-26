@@ -215,15 +215,6 @@ msgstr "使用 Dnsmasq 转发"
 msgid "Firewall Redirect"
 msgstr "使用防火墙转发"
 
-msgid "Disable Dnsmasq's DNS Cache"
-msgstr "禁止 Dnsmasq 缓存 DNS"
-
-msgid "Recommended Enabled For Avoiding Some Connection Errors"
-msgstr "推荐启用，防止因缓存造成连接错误"
-
-msgid "(Maybe Incompatible For Your Firmware)"
-msgstr "（部分固件可能不兼容）"
-
 msgid "Custom DNS Setting"
 msgstr "*自定义上游 DNS 服务器"
 
@@ -3387,6 +3378,15 @@ msgstr "强制覆盖 DNS 查询的子网区域地址"
 msgid "Tip: Respect-rules Option Need Proxy-server-nameserver Option Must Be Setted, Auto Set to"
 msgstr "提示：使用 Respect-rules 功能时 Proxy-server-nameserver 必须配置，插件将默认将其设置为"
 
+msgid "Tip: Nameserver Option Maybe All Setted The Proxy Option, Auto Set Proxy-server-nameserver Option to"
+msgstr "提示：Nameserver 选项可能全部设置了代理选项，插件已自动设置 Proxy-server-nameserver 选项为"
+
+msgid "Tip: Proxy-server-nameserver Option Maybe All Setted The Proxy Option, Auto Set Proxy-server-nameserver Option to"
+msgstr "提示：Proxy-server-nameserver 选项可能全部设置了代理选项，插件已自动为 Proxy-server-nameserver 选项添加设置"
+
+msgid "For Avoiding Proxies Server Resolve Loop..."
+msgstr "以避免代理服务器解析回环..."
+
 msgid "Tip: Config File"
 msgstr "提示：配置文件"
 
@@ -3470,3 +3470,12 @@ msgstr "内部网络地址"
 
 msgid "Error: LAN IP Address Get Error, Please Check The LAN Interface Setting or Choose the Correct Interface in the Setting!"
 msgstr "错误：LAN IP 地址获取失败，请检查 LAN 接口设置或在插件设置中选择正确的 LAN 接口名称"
+
+msgid "Warning: Skiped The Custom Rule Because Group & Proxy Not Found:"
+msgstr "警告：因未找到对应的策略组或代理，为避免启动失败，已跳过此条自定义规则的添加:"
+
+msgid "Disable quic-go GSO Support"
+msgstr "禁用 quic-go GSO 支持"
+
+msgid "Suggestion: If Encountering Issues With QUIC UDP on The Linux Kernel Version Above 6.6, Please Try to Enable."
+msgstr "建议： 如果固件 Linux 核心版本在 6.6 以上时遇到 quic-go 的 UDP 连接问题，请尝试启用。"

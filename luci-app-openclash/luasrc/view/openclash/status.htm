@@ -37,19 +37,6 @@
 				%>
 			</p>
 	    </td></tr>
-	    <tr><td colspan="4" width="100%">
-     		<p style="margin: 10px 0; text-align: center">
-				<img id="gitbook" src="/luci-static/resources/openclash/img/Wiki.svg?<%=random%>" loading="lazy" alt="GitBook" width="50px" height="20px" onerror="return imgerrorfuns(this,'https://img.shields.io/badge/Wiki--lightgrey?logo=GitBook&style=social')" onclick="return gitbookpage()" />
-				&nbsp;&nbsp;&nbsp;
-				<img id="wiki" src="/luci-static/resources/openclash/img/Tutorials.svg?<%=random%>" loading="lazy" alt="Wiki" width="75px" height="20px" onerror="return imgerrorfuns(this,'https://img.shields.io/badge/Tutorials--lightgrey?logo=Wikipedia&style=social')" onclick="return wikipage()" />
-				&nbsp;&nbsp;&nbsp;
-				<img id="star" src="/luci-static/resources/openclash/img/Star.svg?<%=random%>g" loading="lazy" alt="star" width="50px" height="20px" onerror="return imgerrorfuns(this,'https://img.shields.io/badge/Star--lightgrey?logo=github&style=social')" onclick="return homepage()" />
-				&nbsp;&nbsp;&nbsp;
-				<img id="telegram" src="/luci-static/resources/openclash/img/Telegram.svg?<%=random%>" loading="lazy" alt="Telegram" onerror="return imgerrorfuns(this,'https://img.shields.io/badge/Telegram--lightgrey?logo=Telegram&style=social')" onclick="return telegrampage()" />
-				&nbsp;&nbsp;&nbsp;
-				<img id="sponsor" src="/luci-static/resources/openclash/img/Sponsor.svg?<%=random%>" loading="lazy" alt="Sponsor" width="73px" height="20px" onerror="return imgerrorfuns(this,'https://img.shields.io/badge/Sponsor--lightgrey?logo=ko-fi&style=social')" onclick="return sponsorpage()" />
-        	</p>
-        </td></tr>
 	    <tr><td width="100%" colspan="4">
 	  		<div style="margin: 10px 0; text-align: center" id="_clashstart">
 	  			<b><%:Tip: after started, please wait patiently until the connection is normal%></b>
@@ -241,7 +228,7 @@
 			web.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Yacd Panel%>" onclick="return ycad_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			webo.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Dashboard%>" onclick="return net_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			webm.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Metacubexd%>" onclick="return meta_dashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
-			webz.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Zashboard%>" onclick="return net_zashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
+			webz.innerHTML = status.web ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:zashboard%>" onclick="return net_zashboard(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			close_all_connection.innerHTML = status.clash ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Close All Connections%>" onclick="return b_close_all_connection(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			reload_firewall.innerHTML = status.clash ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Reload Firewall Rules%>" onclick="return b_reload_firewall(this)"/>' : '<b style=color:red><%:Not Running%></b>';
 			flush_fakeip_cache.innerHTML = status.clash ? '<input type="button" class="btn cbi-button cbi-button-reload" value="<%:Flush Fake-IP Cache%>" onclick="return b_flush_fakeip_cache(this)"/>' : '<b style=color:red><%:Not Running%></b>';
@@ -845,7 +832,7 @@
     {
         XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "status")%>', null, function(x, status) {
         btn.disabled = true;
-        btn.value    = '<%:Zashboard%>';
+        btn.value    = '<%:zashboard%>';
         if (status.daip && window.location.hostname == status.daip) {
             url9='<%="http://'+window.location.hostname+':'+status.cn_port+'/ui/zashboard/#/setup?hostname='+ window.location.hostname + '&port=' + status.cn_port + '&secret=' + status.dase +'"%>';
         }
