@@ -374,6 +374,13 @@ threads << Thread.new {
       if '${29}' != '0' then
          Value['global-client-fingerprint']='${29}';
       end;
+      if ${36} == 1 then
+         if Value.key?('experimental') then
+            Value['experimental']['quic-go-disable-gso']=true;
+         else
+            Value['experimental']={'quic-go-disable-gso'=>true};
+         end;
+      end;
 
       if ${16} == 1 then
          Value['dns']['ipv6']=true;
@@ -398,7 +405,7 @@ threads << Thread.new {
       end;
       
       if ${18} == 1 then
-         Value_sniffer={'sniffer'=>{'enable'=>true}};
+         Value_sniffer={'sniffer'=>{'enable'=>true, 'override-destination'=>true, 'sniff'=>{'QUIC'=>{'ports'=>[443]}, 'TLS'=>{'ports'=>[443, 8443]}, 'HTTP'=>{'ports'=>[80, '8080-8880'], 'override-destination'=>true}}, 'force-domain'=>['+.netflix.com', '+.nflxvideo.net', '+.amazonaws.com', '+.media.dssott.com'], 'skip-domain'=>['+.apple.com', 'Mijia Cloud', 'dlg.io.mi.com', '+.oray.com', '+.sunlogin.net', '+.push.apple.com']}};
          Value['sniffer']=Value_sniffer['sniffer'];
          if '$1' == 'redir-host' then
             Value['sniffer']['force-dns-mapping']=true;
@@ -781,10 +788,24 @@ begin
       Value['dns'].merge!(Value_1);
       Value['dns'].merge!(Value_2);
    end;
-   if ${33} == 1 or Value['dns']['respect-rules'].to_s == 'true' then
-      if not Value['dns'].has_key?('proxy-server-nameserver') or Value['dns']['proxy-server-nameserver'].to_a.empty? then
+   local_interface = (%x{ls -l /sys/class/net/ |awk '{print \$9}'  2>&1}.each_line.map(&:strip) + ['utun', 'tailscale0', 'docker0', 'tun163', 'br-lan', 'mihomo']).uniq.join('|');
+   reg = /^[^#&]+#(?:(?:h3=|skip-cert-verify=|ecs=|ecs-override=|#{local_interface})[^&]*&)*(?:(?!(?:h3=|skip-cert-verify=|ecs=|ecs-override=|#{local_interface}))[^&]+)/;
+   if not Value['dns'].has_key?('proxy-server-nameserver') or Value['dns']['proxy-server-nameserver'].to_a.empty? then
+      all_match = Value['dns']['nameserver'].all? { |x| x =~ reg }
+      if ${33} == 1 or Value['dns']['respect-rules'].to_s == 'true' or all_match then
          Value['dns'].merge!({'proxy-server-nameserver'=>['114.114.114.114','119.29.29.29','8.8.8.8','1.1.1.1']});
-         YAML.LOG('Tip: Respect-rules Option Need Proxy-server-nameserver Option Must Be Setted, Auto Set to【114.114.114.114, 119.29.29.29, 8.8.8.8, 1.1.1.1】');
+         if all_match then
+            YAML.LOG('Tip: Nameserver Option Maybe All Setted The Proxy Option, Auto Set Proxy-server-nameserver Option to【114.114.114.114, 119.29.29.29, 8.8.8.8, 1.1.1.1】For Avoiding Proxies Server Resolve Loop...');
+         else
+            YAML.LOG('Tip: Respect-rules Option Need Proxy-server-nameserver Option Must Be Setted, Auto Set to【114.114.114.114, 119.29.29.29, 8.8.8.8, 1.1.1.1】');
+         end;
+      end;
+   else
+      all_match = Value['dns']['proxy-server-nameserver'].all? { |x| x =~ reg }
+      if all_match then
+         Value_1={'proxy-server-nameserver'=>['114.114.114.114','119.29.29.29','8.8.8.8','1.1.1.1']};
+         Value['dns']['proxy-server-nameserver'] = Value['dns']['proxy-server-nameserver'] | Value_1['proxy-server-nameserver'];
+         YAML.LOG('Tip: Proxy-server-nameserver Option Maybe All Setted The Proxy Option, Auto Set Proxy-server-nameserver Option to【114.114.114.114, 119.29.29.29, 8.8.8.8, 1.1.1.1】For Avoiding Proxies Server Resolve Loop...');
       end;
    end;
 rescue Exception => e
