@@ -262,7 +262,7 @@ yml_rule_group_get()
       return
    fi
    
-   if [ -z "$group" ] || [ "$group" = "DIRECT" ] || [ "$group" = "REJECT" ]; then
+   if [ -z "$group" ] || [ "$group" = "DIRECT" ] || [ "$group" = "REJECT" ] || [ "$group" = "REJECT-DROP" ] || [ "$group" = "PASS" ] || [ "$group" = "COMPATIBLE" ] || [ "$group" = "GLOBAL" ]; then
       return
    fi
 
@@ -362,9 +362,41 @@ yml_other_set()
       #BT/P2P DIRECT Rules
       begin
          if $4 == 1 then
-            Value['rules']=Value['rules'].to_a.insert(0,
-            'GEOSITE,category-public-tracker,DIRECT'
-            );
+            if system('strings /etc/openclash/GeoSite.dat /etc/openclash/GeoSite.dat |grep -i category-public-tracker >/dev/null 2>&1') then
+               Value['rules']=Value['rules'].to_a.insert(0,
+               'GEOSITE,category-public-tracker,DIRECT'
+               );
+            else
+               Value['rules']=Value['rules'].to_a.insert(0,
+               'DOMAIN-SUFFIX,awesome-hd.me,DIRECT',
+               'DOMAIN-SUFFIX,broadcasthe.net,DIRECT',
+               'DOMAIN-SUFFIX,chdbits.co,DIRECT',
+               'DOMAIN-SUFFIX,classix-unlimited.co.uk,DIRECT',
+               'DOMAIN-SUFFIX,empornium.me,DIRECT',
+               'DOMAIN-SUFFIX,gazellegames.net,DIRECT',
+               'DOMAIN-SUFFIX,hdchina.org,DIRECT',
+               'DOMAIN-SUFFIX,hdsky.me,DIRECT',
+               'DOMAIN-SUFFIX,icetorrent.org,DIRECT',
+               'DOMAIN-SUFFIX,jpopsuki.eu,DIRECT',
+               'DOMAIN-SUFFIX,keepfrds.com,DIRECT',
+               'DOMAIN-SUFFIX,madsrevolution.net,DIRECT',
+               'DOMAIN-SUFFIX,m-team.cc,DIRECT',
+               'DOMAIN-SUFFIX,nanyangpt.com,DIRECT',
+               'DOMAIN-SUFFIX,ncore.cc,DIRECT',
+               'DOMAIN-SUFFIX,open.cd,DIRECT',
+               'DOMAIN-SUFFIX,ourbits.club,DIRECT',
+               'DOMAIN-SUFFIX,passthepopcorn.me,DIRECT',
+               'DOMAIN-SUFFIX,privatehd.to,DIRECT',
+               'DOMAIN-SUFFIX,redacted.ch,DIRECT',
+               'DOMAIN-SUFFIX,springsunday.net,DIRECT',
+               'DOMAIN-SUFFIX,tjupt.org,DIRECT',
+               'DOMAIN-SUFFIX,totheglory.im,DIRECT',
+               'DOMAIN-SUFFIX,smtp,DIRECT',
+               'DOMAIN-KEYWORD,announce,DIRECT',
+               'DOMAIN-KEYWORD,torrent,DIRECT',
+               'DOMAIN-KEYWORD,tracker,DIRECT'
+               );
+            end;
             match_group=Value['rules'].grep(/(MATCH|FINAL)/)[0];
             if not match_group.nil? then
                common_port_group = (match_group.split(',')[-1] =~ /^no-resolve$|^src$/) ? match_group.split(',')[-2] : match_group.split(',')[-1];
@@ -401,8 +433,10 @@ yml_other_set()
                   'DST-PORT,443,' + common_port_group
                   );
                end;
-            end
-            Value['rules'].to_a.collect!{|x|x.to_s.gsub(/(^MATCH.*|^FINAL.*)/, 'MATCH,DIRECT')};
+            end;
+            Value['rules'].to_a.collect!{|x|x.to_s
+            .gsub(/GEOIP,([^,]+),([^,]+)(,.*)?/, 'GEOIP,\1,DIRECT\3')
+            .gsub(/(^MATCH.*|^FINAL.*)/, 'MATCH,DIRECT')};
          end;
       rescue Exception => e
          YAML.LOG('Error: Set BT/P2P DIRECT Rules Failed,【' + e.message + '】');
@@ -460,13 +494,12 @@ yml_other_set()
       #CONFIG_GROUP
       CUSTOM_RULE = YAML.load_file('/etc/openclash/custom/openclash_custom_rules.list')
       CUSTOM_RULE_2 = YAML.load_file('/etc/openclash/custom/openclash_custom_rules_2.list')
-      CONFIG_GROUP = (Value['proxy-groups'].map { |x| x['name'] }\
-      + ['DIRECT', 'REJECT', 'GLOBAL']\
-      + (if Value['proxies'] != nil and not Value['proxies'].empty? then Value['proxies'].map { |x| x['name'] } else [] end)\
-      + (if Value['sub-rules'] != nil and not Value['sub-rules'].empty? then Value['sub-rules'].keys else [] end)\
-      + (if CUSTOM_RULE['sub-rules'] != nil and not CUSTOM_RULE['sub-rules'].empty? then CUSTOM_RULE['sub-rules'].keys else [] end)\
-      + (if CUSTOM_RULE_2['sub-rules'] != nil and not CUSTOM_RULE_2['sub-rules'].empty? then CUSTOM_RULE_2['sub-rules'].keys else [] end)\
-      ).uniq;
+      CONFIG_GROUP = (['DIRECT', 'REJECT', 'GLOBAL', 'REJECT-DROP', 'PASS', 'COMPATIBLE'] +
+      (Value['proxy-groups']&.map { |x| x['name'] } || []) +
+      (Value['proxies']&.map { |x| x['name'] } || []) +
+      (Value['sub-rules']&.keys || []) +
+      (CUSTOM_RULE.is_a?(Hash) ? CUSTOM_RULE['sub-rules']&.keys || [] : []) +
+      (CUSTOM_RULE_2.is_a?(Hash) ? CUSTOM_RULE_2['sub-rules']&.keys || [] : [])).uniq;
 
       #Custom Rule Set
       begin
