@@ -76,14 +76,14 @@ ul{
 .radio-button label {
 	display: inline-block;
 	padding: 4px 11px;
-	font-size: 18px;
+	font-size: 14px;
 	color: white;
 	cursor: pointer;
 	border-radius: 4px;
 }
 
 .radio-button input[type="radio"]:checked+label {
-	background-color: #1080c1;
+	background-color: #006786;
 }
 
 </style>
@@ -198,6 +198,7 @@ function createAndDownloadFile(fileName, content) {
 function download_log(){
 	var dt = new Date();
 	var timestamp = dt.getFullYear()+"-"+(dt.getMonth()+1)+"-"+dt.getDate()+"-"+dt.getHours()+"-"+dt.getMinutes()+"-"+dt.getSeconds();
+	lv.innerHTML = lv.innerHTML.split('\n').filter(function(line) { return line.indexOf("】订阅的下载链接为【") === -1 && line.indexOf("】Downloading URL【") === -1; }).join('\n');
 	createAndDownloadFile("OpenClash-"+timestamp+".log","<%:OpenClash Log%>:\n"+lv.innerHTML+"\n<%:Core Log%>:\n"+cl.innerHTML)
 	return
 };

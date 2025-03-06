@@ -23,6 +23,7 @@ function index()
 	entry({"admin", "services", "openclash", "update_other_rules"},call("action_update_other_rules"))
 	entry({"admin", "services", "openclash", "update_geoip"},call("action_update_geoip"))
 	entry({"admin", "services", "openclash", "update_geosite"},call("action_update_geosite"))
+	entry({"admin", "services", "openclash", "lastversion"},call("action_lastversion"))
 	entry({"admin", "services", "openclash", "save_corever_branch"},call("action_save_corever_branch"))
 	entry({"admin", "services", "openclash", "update"},call("action_update"))
 	entry({"admin", "services", "openclash", "update_info"},call("action_update_info"))
@@ -182,11 +183,6 @@ local function db_foward_ssl()
 	return uci:get("openclash", "config", "dashboard_forward_ssl") or 0
 end
 
-local function check_lastversion()
-	luci.sys.exec("bash /usr/share/openclash/openclash_version.sh 2>/dev/null")
-	return luci.sys.exec("sed -n '/^https:/,$p' /tmp/openclash_last_version 2>/dev/null")
-end
-
 local function startlog()
 	local info = ""
 	local line_trans = ""
@@ -294,21 +290,6 @@ local function save_corever_branch()
 	end
 	uci:commit("openclash")
 	return "success"
-end
-
-local function upchecktime()
-	local corecheck = os.date("%Y-%m-%d %H:%M:%S",fs.mtime("/tmp/clash_last_version"))
-	local opcheck
-	if not corecheck or corecheck == "" then
-    	opcheck = os.date("%Y-%m-%d %H:%M:%S",fs.mtime("/tmp/openclash_last_version"))
-    	if not opcheck or opcheck == "" then
-        	return "1"
-    	else
-        	return opcheck
-    	end
-	else
-    	return corecheck
-	end
 end
 
 local function historychecktime()
@@ -1076,6 +1057,13 @@ function action_state()
 		historychecktime = historychecktime(),
 		chnroutev6 = chnroutev6(),
 		chnroute = chnroute();
+	})
+end
+
+function action_lastversion()
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+			lastversion = check_lastversion();
 	})
 end
 
