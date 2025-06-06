@@ -22,7 +22,7 @@ function IsYmlFile(e)
    return e == ".yml"
 end
 
-m = Map(openclash, translate("Edit Group"))
+m = Map(openclash, translate(""))
 m.pageaction = false
 m.redirect = luci.dispatcher.build_url("admin/services/openclash/servers")
 if m.uci:get(openclash, sid) ~= "groups" then
@@ -138,5 +138,5 @@ o.write = function()
    luci.http.redirect(m.redirect)
 end
 
-m:append(Template("openclash/toolbar_show"))
+--- m:append(Template("openclash/toolbar_show"))
 return m

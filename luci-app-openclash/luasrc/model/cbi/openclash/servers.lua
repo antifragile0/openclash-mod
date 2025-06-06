@@ -13,7 +13,7 @@ m = Map(openclash,  translate(""))
 m.pageaction = false
 --- m.description=translate("Attention:")..
 --- "<br/>"..translate("1. Before modifying the configuration file, please click the button below to read the configuration file")..
---- "--- <br/>"..translate("2. Proxy-providers address can be directly filled in the subscription link")..
+--- "<br/>"..translate("2. Proxy-providers address can be directly filled in the subscription link")..
 --- "<br/>"..
 --- "<br/>"..translate("Introduction to proxy usage: https://wiki.metacubex.one/config/proxies/")..
 --- "<br/>"..translate("Introduction to proxy-provider usage: https://wiki.metacubex.one/config/proxy-providers/")
