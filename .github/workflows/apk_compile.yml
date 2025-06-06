@@ -42,7 +42,7 @@ jobs:
           echo -e "\033[34m📦 Extracting SDK \033[0m"
           zstd -d sdk.tar.zst -o sdk.tar
           tar -xf sdk.tar
-          mv openwrt-sdk-x86-64_gcc-13.3.0_musl.Linux-x86_64 sdk
+          mv openwrt-sdk-x86-64_gcc-14.3.0_musl.Linux-x86_64 sdk
 
           echo -e "\033[34m📦 Cloning package \033[0m"
           git clone -q https://github.com/${{ github.repository }} sdk/package/tmp
