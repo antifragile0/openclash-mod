@@ -37,7 +37,7 @@ jobs:
       - name: 📦 Set up resources
         run: |
           echo -e "\033[34m🗂️ Downloading SDK OpenWRT \033[0m"
-          curl -fSL https://downloads.openwrt.org/snapshots/targets/x86/64/openwrt-sdk-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst -o sdk.tar.zst
+          curl -fSL https://downloads.openwrt.org/snapshots/targets/x86/64/openwrt-sdk-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst -o sdk.tar.zst
 
           echo -e "\033[34m📦 Extracting SDK \033[0m"
           zstd -d sdk.tar.zst -o sdk.tar
